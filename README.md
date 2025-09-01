@@ -13,7 +13,7 @@ Highlights
 
 Installation
 - Unzip so the folder structure is: Interface/AddOns/EquiFastJoin/
-- Files should include: `EquiFastJoin.toc`, `EquiFastJoin.lua`, `Icons/EFJ-ICON.TGA`.
+ - Files should include: `EquiFastJoin.toc`, `EquiFastJoin.lua`, `Media/efjicon.tga`.
 - Restart or reload UI (`/reload`).
 
 Usage
@@ -36,10 +36,10 @@ Quick Join specifics
 Troubleshooting
 - No icons or entries: Ensure there are Quick Join suggestions or enable general LFG results in options.
 - Join button not changing: Some realms/UI lag can delay status events. The addon polls briefly after using the Blizzard dialog.
-- Icons: `Icons/EFJ-ICON.TGA` must be uncompressed TGA, preferably 32‑bit with alpha; sizes like 64×64 or 128×128 work well.
+- Icons: `Media/efjicon.tga` must be uncompressed TGA, preferably 32‑bit with alpha; sizes like 64×64 or 128×128 work well.
 
 Packaging for CurseForge
-- Include: `EquiFastJoin.toc`, `EquiFastJoin.lua`, `Icons/EFJ-ICON.TGA`, `README.md`, `CHANGELOG.md`, `LICENSE`.
+- Include: `EquiFastJoin.toc`, `EquiFastJoin.lua`, `Media/efjicon.tga` (and/or `Media/efjicon64x64.tga`), `README.md`, `CHANGELOG.md`, `LICENSE`.
 - Zip the folder `EquiFastJoin/` (do not zip only the files).
 - Provide project icon, screenshots and a short/long description on the project page.
 

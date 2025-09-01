@@ -10,5 +10,5 @@
 - Role icons: show remaining roles (Tank/Healer/DPS) for LFG results.
 - Options: Only Quick Join, Auto-open on Quick Join, Sound, Toast, Scale, Lock frame.
 - Slash: /efj test|show|hide|options|debug on|off.
-- AddOn icon via TOC: Icons/EFJ-ICON.TGA.
+- AddOn icon via TOC: Icons/LogoAddon.tga.
 
