@@ -67,6 +67,7 @@ local FindLeaderClass
 local BuildCategoryColor
 local SetMemberIconsFromLFG
 local GatherQuickJoinEntries
+local SetRoleIconsFromLFG
 
 local function BuildActivityText(res)
   if not res then return "Unbekannte Aktivität" end
@@ -499,15 +500,15 @@ SetMemberIconsFromLFG = function(row, id, num)
   end
 end
 
-local function SetRoleIconsFromLFG(row, id)
+SetRoleIconsFromLFG = function(row, id)
   for i,tex in ipairs(row.classIcons) do tex:Hide() end
   local counts = C_LFGList.GetSearchResultMemberCounts and C_LFGList.GetSearchResultMemberCounts(id)
   if not counts then return end
   local order = {"TANK","HEALER","DAMAGER"}
   local roleAtlas = {
-    TANK = "roleicon-tiny-tank",
-    HEALER = "roleicon-tiny-healer",
-    DAMAGER = "roleicon-tiny-dps",
+    TANK = "groupfinder-icon-role-micro-tank",
+    HEALER = "groupfinder-icon-role-micro-heal",
+    DAMAGER = "groupfinder-icon-role-micro-dps",
   }
   local prev, shown = nil, 0
   for _,role in ipairs(order) do
