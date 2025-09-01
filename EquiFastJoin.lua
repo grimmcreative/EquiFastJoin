@@ -448,9 +448,9 @@ function EFJ.UI:ShowQuickJoin(entries)
       local title = e.res and (e.res.name or e.comment or "") or (e.comment or "")
       row.textNote:SetText(title)
       if e.res and e.lfgID then
-        SetMemberIconsFromLFG(row, e.lfgID, e.res.numMembers or 0)
+        if SetRoleIconsFromLFG then SetRoleIconsFromLFG(row, e.lfgID) end
       else
-        SetQuickJoinMemberIcons(row, e.memberClasses)
+        for i,tex in ipairs(row.classIcons) do tex:Hide() end
       end
 
       if e.lfgID then
@@ -499,6 +499,38 @@ SetMemberIconsFromLFG = function(row, id, num)
   end
 end
 
+local function SetRoleIconsFromLFG(row, id)
+  for i,tex in ipairs(row.classIcons) do tex:Hide() end
+  local counts = C_LFGList.GetSearchResultMemberCounts and C_LFGList.GetSearchResultMemberCounts(id)
+  if not counts then return end
+  local order = {"TANK","HEALER","DAMAGER"}
+  local roleAtlas = {
+    TANK = "roleicon-tiny-tank",
+    HEALER = "roleicon-tiny-healer",
+    DAMAGER = "roleicon-tiny-dps",
+  }
+  local prev, shown = nil, 0
+  for _,role in ipairs(order) do
+    local rem = counts[role.."_REMAINING"] or 0
+    for _ = 1, rem do
+      shown = shown + 1
+      local tex=row.classIcons[shown]
+      if not tex then tex=row.classHolder:CreateTexture(nil,"ARTWORK"); row.classIcons[shown]=tex; tex:SetSize(16,16) end
+      if prev then tex:SetPoint("LEFT",prev,"RIGHT",2,0) else tex:SetPoint("LEFT",row.classHolder,"LEFT",0,0) end
+      if tex.SetAtlas then
+        tex:SetAtlas(roleAtlas[role] or "roleicon-tiny-dps")
+      else
+        tex:SetTexture("Interface\\LFGFrame\\UI-LFG-ICON-ROLES")
+        local l, r, t, b = GetTexCoordsForRole and GetTexCoordsForRole(role)
+        if l then tex:SetTexCoord(l, r, t, b) else tex:SetTexCoord(0,1,0,1) end
+      end
+      tex:Show(); prev=tex
+      if shown>=8 then break end
+    end
+    if shown>=8 then break end
+  end
+end
+
 local function normalizeName(n)
   if not n then return nil end
   local base = n:match("^[^-]+") or n
@@ -540,7 +572,7 @@ function EFJ.UI:SetRows(ids)
         local color = BuildCategoryColor(res)
         row.textActivity:SetText((color.."%s|r"):format(res.activityText or "Unbekannte Aktivität"))
         row.textNote:SetText(res.name or res.comment or "")
-        SetMemberIconsFromLFG(row, id, res.numMembers or 0)
+        if SetRoleIconsFromLFG then SetRoleIconsFromLFG(row, id) end
 
         row.join:SetEnabled(true); row.join:SetAlpha(1)
         row.join:SetText("Beitreten")
