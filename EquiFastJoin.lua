@@ -5,6 +5,7 @@
 local ADDON_NAME = ...
 local EFJ = {}
 _G.EquiFastJoin = EFJ
+EFJ.State = EFJ.State or { applications = {} }
 
 EquiFastJoinDB = EquiFastJoinDB or nil
 local DEFAULTS = {
@@ -18,6 +19,7 @@ local DEFAULTS = {
   rel = "CENTER",
   x = 0, y = 0,
   -- Filters & UX
+  onlyQuickJoin = true,
   showRaids = true,
   showDungeons = true,
   showMythicPlus = true,
@@ -64,6 +66,7 @@ end
 local FindLeaderClass
 local BuildCategoryColor
 local SetMemberIconsFromLFG
+local GatherQuickJoinEntries
 
 local function BuildActivityText(res)
   if not res then return "Unbekannte Aktivität" end
@@ -156,17 +159,36 @@ local function TryJoinAndMark(row, id)
   local r = TryJoin(id)
   if r == "applied" then
     if row and row.join then
-      row.join:SetEnabled(false)
-      row.join:SetAlpha(0.5)
-      row.join:SetText("Beworben")
+      row.join:SetEnabled(true)
+      row.join:SetAlpha(1)
+      row.join:SetText("Abmelden")
+      row.join:SetScript("OnClick", function() CancelApplicationAndMark(row, id) end)
     end
   elseif r == "dialog" then
     -- Keep button enabled; user completes application in Blizzard dialog
+    C_Timer.After(0.5, function() if row then EFJ.UI:UpdateJoinButton(row, id) end end)
+    C_Timer.After(2.0, function() if row then EFJ.UI:UpdateJoinButton(row, id) end end)
   else
     if row and row.join then
       row.join:SetEnabled(true)
       row.join:SetAlpha(1)
     end
+  end
+end
+
+local function CancelApplicationAndMark(row, id)
+  if not id or not C_LFGList or not C_LFGList.CancelApplication then return end
+  local ok, err = pcall(function() C_LFGList.CancelApplication(id) end)
+  if not ok and UIErrorsFrame and err then
+    UIErrorsFrame:AddMessage("EFJ: Abmelden fehlgeschlagen", 1, 0.2, 0.2)
+    DBG("CancelApplication error:", err)
+    return
+  end
+  if EFJ.State and EFJ.State.applications then EFJ.State.applications[id] = "cancelled" end
+  if row and row.join then
+    row.join:SetEnabled(false)
+    row.join:SetAlpha(0.5)
+    row.join:SetText("Abgemeldet")
   end
 end
 
@@ -289,6 +311,74 @@ function EFJ.UI:Create()
   f:Hide(); self.frame=f; self.content=content
 end
 
+function EFJ.UI:UpdateJoinButton(row, id)
+  if not row or not id then return end
+  local cached = EFJ.State and EFJ.State.applications and EFJ.State.applications[id]
+  local _, appStatus, pendingStatus = C_LFGList.GetApplicationInfo and C_LFGList.GetApplicationInfo(id) or nil
+  appStatus = appStatus or cached or "none"
+  if appStatus == "applied" or pendingStatus then
+    row.join:SetEnabled(true)
+    row.join:SetAlpha(1)
+    row.join:SetText("Abmelden")
+    row.join:SetScript("OnClick", function() CancelApplicationAndMark(row, id) end)
+  elseif appStatus == "invited" then
+    row.join:SetEnabled(false)
+    row.join:SetAlpha(0.6)
+    row.join:SetText("Eingeladen")
+  else
+    row.join:SetEnabled(true)
+    row.join:SetAlpha(1)
+    row.join:SetText("Beitreten")
+    row.join:SetScript("OnClick", function() TryJoinAndMark(row, id) end)
+  end
+end
+
+function EFJ.UI:MarkAppliedByID(id, newStatus)
+  if not id then return end
+  if EFJ.State and EFJ.State.applications then EFJ.State.applications[id] = newStatus end
+  for _, row in ipairs(self.rows) do
+    if row:IsShown() and row.resultID == id then
+      if newStatus == "applied" or newStatus == "applied_with_role" then
+        row.join:SetEnabled(true)
+        row.join:SetAlpha(1)
+        row.join:SetText("Abmelden")
+        row.join:SetScript("OnClick", function() CancelApplicationAndMark(row, id) end)
+      elseif newStatus == "invited" then
+        row.join:SetEnabled(false)
+        row.join:SetAlpha(0.6)
+        row.join:SetText("Eingeladen")
+      elseif newStatus == "declined" or newStatus == "declined_full" or newStatus == "declined_delisted" or newStatus == "timedout" or newStatus == "cancelled" or newStatus == "none" then
+        if EFJ.State and EFJ.State.applications then EFJ.State.applications[id] = nil end
+        row.join:SetEnabled(true)
+        row.join:SetAlpha(1)
+        row.join:SetText("Beitreten")
+        row.join:SetScript("OnClick", function() TryJoinAndMark(row, id) end)
+      end
+      break
+    end
+  end
+end
+
+function EFJ.UI:StartQuickTicker()
+  if self.quickTicker then return end
+  self.quickTicker = C_Timer.NewTicker(3, function()
+    if self.mode ~= "quickjoin" then self:StopQuickTicker(); return end
+    local entries = GatherQuickJoinEntries()
+    if not entries or #entries == 0 then
+      if self.frame and self.frame:IsShown() then self.frame:Hide() end
+      self.mode = "none"
+      self:StopQuickTicker()
+      return
+    end
+    -- Re-render to remove stale rows
+    self:ShowQuickJoin(entries)
+  end)
+end
+
+function EFJ.UI:StopQuickTicker()
+  if self.quickTicker then self.quickTicker:Cancel(); self.quickTicker = nil end
+end
+
 -- Show a lightweight banner row for Quick Join or Test
 function EFJ.UI:ShowBanner(headline, subline)
   self:Create()
@@ -367,10 +457,13 @@ function EFJ.UI:ShowQuickJoin(entries)
         row.join:SetEnabled(true); row.join:SetAlpha(1)
         row.join:SetText("Beitreten")
         row.join:SetScript("OnClick", function() TryJoinAndMark(row, e.lfgID) end)
+        row.resultID = e.lfgID
+        self:UpdateJoinButton(row, e.lfgID)
       else
         row.join:SetEnabled(false); row.join:SetAlpha(0.4)
         row.join:SetText("Nicht LFG")
         row.join:SetScript("OnClick", nil)
+        row.resultID = nil
       end
 
       row:Show()
@@ -380,9 +473,12 @@ function EFJ.UI:ShowQuickJoin(entries)
   end
   if #filtered == 0 then
     if self.frame and self.frame:IsShown() then self.frame:Hide() end
+    self.mode = "none"
+    self:StopQuickTicker()
     return
   end
   self.frame:Show()
+  self:StartQuickTicker()
 end
 
 SetMemberIconsFromLFG = function(row, id, num)
@@ -447,14 +543,19 @@ function EFJ.UI:SetRows(ids)
         SetMemberIconsFromLFG(row, id, res.numMembers or 0)
 
         row.join:SetEnabled(true); row.join:SetAlpha(1)
+        row.join:SetText("Beitreten")
         row.join:SetScript("OnClick", function() TryJoinAndMark(row, id) end)
+        row.resultID = id
+        self:UpdateJoinButton(row, id)
 
         row:Show()
         table.insert(self.visibleIDs, id)
       else
+        row.resultID = nil
         row:Hide()
       end
     else
+      row.resultID = nil
       row:Hide()
     end
   end
@@ -482,6 +583,7 @@ end
 
 function EFJ.UI:ShowListFor(ids)
   self:Create()
+  self:StopQuickTicker()
   self:SetRows(ids)
   if #self.visibleIDs==0 then
     if self.frame and self.frame:IsShown() then self.frame:Hide() end
@@ -530,49 +632,60 @@ BuildCategoryColor = function(res)
 end
 
 -- Quick Join helpers ----------------------------------------------------------
-local function GatherQuickJoinEntries()
+GatherQuickJoinEntries = function()
   if not C_SocialQueue or not C_SocialQueue.GetAllGroups then return {} end
   local groups = C_SocialQueue.GetAllGroups() or {}
   local out = {}
   for _, guid in ipairs(groups) do
     local players = C_SocialQueue.GetGroupMembers(guid)
     local queues = C_SocialQueue.GetGroupQueues and C_SocialQueue.GetGroupQueues(guid)
-    local firstQueue = queues and queues[1] or nil
-    local lfgListID = (firstQueue and firstQueue.queueData and firstQueue.queueData.queueType == 'lfglist') and firstQueue.queueData.lfgListID or nil
-    local res = lfgListID and GetFreshResultInfo(lfgListID) or nil
-    local leaderName, leaderClass, actText, comment, numMembers
-    local memberClasses = {}
-    if players and #players>0 then
-      -- Show first member as headline (friend/guildie)
-      local m = players[1]
-      local name
-      if SocialQueueUtil_GetRelationshipInfo then
-        local n = SocialQueueUtil_GetRelationshipInfo(m.guid, nil, m.clubId)
-        name = type(n) == 'string' and n:gsub("|r", "") or nil
-      end
-      if not name then
-        local n, _, _, _, classFile = GetPlayerInfoByGUID(m.guid)
-        name = n or "-"
-      end
-      leaderName = name
-      local _, _, _, _, classFile = GetPlayerInfoByGUID(m.guid)
-      leaderClass = classFile
-      -- Gather known class icons (friends/guildies in that group)
-      for i=1,math.min(#players,8) do
-        local n, _, _, _, classFile = GetPlayerInfoByGUID(players[i].guid)
-        if classFile then table.insert(memberClasses, classFile) end
+    local lfgListID, chosenQueue
+    if type(queues) == "table" then
+      for _, q in ipairs(queues) do
+        if type(q) == "table" and q.eligible and q.queueData and q.queueData.queueType == 'lfglist' and q.queueData.lfgListID then
+          lfgListID = q.queueData.lfgListID
+          chosenQueue = q
+          break
+        end
       end
     end
-    if res then
-      actText = res.activityText or res.name or "Unbekannte Aktivität"
-      comment = res.comment or ""
-      numMembers = res.numMembers or 0
-    elseif firstQueue and firstQueue.queueData and SocialQueueUtil_GetQueueName then
-      actText = SocialQueueUtil_GetQueueName(firstQueue.queueData)
-      comment = ""
-      numMembers = 0
+    -- Only show QuickJoin entries that map to an eligible LFG listing
+    if lfgListID then
+      local res = GetFreshResultInfo(lfgListID)
+      if res then
+        local leaderName, leaderClass
+        local memberClasses = {}
+        if players and #players>0 then
+          local m = players[1]
+          local name
+          if SocialQueueUtil_GetRelationshipInfo then
+            local n = SocialQueueUtil_GetRelationshipInfo(m.guid, nil, m.clubId)
+            name = type(n) == 'string' and n:gsub("|r", "") or nil
+          end
+          if not name then
+            local n2 = GetPlayerInfoByGUID(m.guid)
+            name = (type(n2)=="string" and n2) or (type(n2)=="table" and n2[1]) or "-"
+          end
+          leaderName = name
+          local _, _, _, _, classFile = GetPlayerInfoByGUID(m.guid)
+          leaderClass = classFile
+          for i=1,math.min(#players,8) do
+            local _, _, _, _, classFile2 = GetPlayerInfoByGUID(players[i].guid)
+            if classFile2 then table.insert(memberClasses, classFile2) end
+          end
+        end
+        table.insert(out, {
+          guid=guid,
+          lfgID=lfgListID,
+          leaderName=leaderName or "-",
+          leaderClass=leaderClass,
+          activityText=res.activityText or res.name or "Unbekannte Aktivität",
+          comment=res.name or res.comment or "",
+          memberClasses=memberClasses,
+          res=res,
+        })
+      end
     end
-    table.insert(out, { guid=guid, lfgID=lfgListID, leaderName=leaderName or "-", leaderClass=leaderClass, activityText=actText or "-", comment=comment or "", memberClasses=memberClasses, res=res })
   end
   return out
 end
@@ -580,7 +693,7 @@ end
 local function ProcessResultsAndMaybeShow(origin)
   if IsInInstance() or IsInGroup() or IsInRaid() then return end
   -- If QuickJoin view is active, don't override it with LFG updates
-  if EFJ.UI and EFJ.UI.mode == "quickjoin" then return end
+  if EquiFastJoinDB.onlyQuickJoin or (EFJ.UI and EFJ.UI.mode == "quickjoin") then return end
   local ids = GatherResults()
   DBG("Process", origin or "update", "#ids:", #ids)
   if #ids==0 then
@@ -604,7 +717,8 @@ ev:RegisterEvent("LFG_LIST_ACTIVE_ENTRY_UPDATE")
 ev:RegisterEvent("LFG_LIST_APPLICATION_STATUS_UPDATED")
 ev:RegisterEvent("GROUP_ROSTER_UPDATE")
 ev:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-ev:SetScript("OnEvent", function(_,event,arg1)
+ev:SetScript("OnEvent", function(_,event,...)
+  local arg1, arg2, arg3, arg4 = ...
   if event=="ADDON_LOADED" and arg1==ADDON_NAME then
     EquiFastJoinDB=EquiFastJoinDB or {}; CopyDefaults(EquiFastJoinDB,DEFAULTS)
     EFJ.UI:Create()
@@ -675,6 +789,8 @@ ev:SetScript("OnEvent", function(_,event,arg1)
         AddCheck("Benutzerdefiniert/Quest anzeigen", "Zeigt benutzerdefinierte/Quest-Gruppen", "showCustom", 16, y)
         AddCheck("Bei Schnellbeitritt auto-öffnen", "Öffnet Liste bei QuickJoin Vorschlägen", "openOnQuickJoin", 220, y)
         y = y - 28
+        AddCheck("Nur Schnellbeitritt anzeigen", "Versteckt allgemeine LFG-Ergebnisse", "onlyQuickJoin", 16, y)
+        y = y - 28
         AddCheck("Sound abspielen", "Spielt einen kurzen Sound beim Öffnen", "playSound", 16, y)
         AddCheck("Toast Nachricht", "Zeigt eine RaidWarning Toast", "showToast", 220, y)
         y = y - 28
@@ -685,32 +801,44 @@ ev:SetScript("OnEvent", function(_,event,arg1)
         AddButton("Testfenster", 16, y, function() EFJ.UI:ShowTest() end)
         AddButton("Jetzt aktualisieren", 200, y, function() ProcessResultsAndMaybeShow("OPT_BTN") end)
 
-        if InterfaceOptions_AddCategory then InterfaceOptions_AddCategory(panel) end
+        -- Register options in new Settings UI (Retail) or old Interface Options
+        if Settings and Settings.RegisterCanvasLayoutCategory and Settings.RegisterAddOnCategory then
+          local category = Settings.RegisterCanvasLayoutCategory(panel, "EquiFastJoin")
+          Settings.RegisterAddOnCategory(category)
+        elseif InterfaceOptions_AddCategory then
+          InterfaceOptions_AddCategory(panel)
+        end
         self.panel=panel
       end
       EFJ.Options:Create()
     end
-    DBG("Addon geladen. Initialisiere Suche & Aktualisierung.")
-    -- Initial broad search to populate results
-    C_Timer.After(1.0, function()
-      pcall(function() C_LFGList.Search(0, "", 0, 0) end)
-      C_Timer.After(0.5, function()
-        pcall(function() C_LFGList.RefreshResults() end)
-        ProcessResultsAndMaybeShow("INIT")
+    DBG("Addon geladen. Initialisiere Aktualisierung.")
+    if not EquiFastJoinDB.onlyQuickJoin then
+      -- Optional: initial LFG search & periodic refresh when not restricted to Quick Join
+      C_Timer.After(1.0, function()
+        pcall(function() C_LFGList.Search(0, "", 0, 0) end)
+        C_Timer.After(0.5, function()
+          pcall(function() C_LFGList.RefreshResults() end)
+          ProcessResultsAndMaybeShow("INIT")
+        end)
       end)
-    end)
-    -- Periodically refresh search results so new entries appear
-    C_Timer.NewTicker(10, function()
-      pcall(function() C_LFGList.RefreshResults() end)
-      ProcessResultsAndMaybeShow("TICK")
-    end)
+      C_Timer.NewTicker(10, function()
+        pcall(function() C_LFGList.RefreshResults() end)
+        ProcessResultsAndMaybeShow("TICK")
+      end)
+    end
   else
     -- On relevant activity or quick-join updates, refresh and re-evaluate
-    if event == "SOCIAL_QUEUE_UPDATE"
-      or event == "LFG_LIST_SEARCH_RESULT_UPDATED"
+    if (not EquiFastJoinDB.onlyQuickJoin) and (event == "LFG_LIST_SEARCH_RESULT_UPDATED"
       or event == "LFG_LIST_SEARCH_RESULTS_RECEIVED"
-      or event == "LFG_LIST_ACTIVE_ENTRY_UPDATE" then
+      or event == "LFG_LIST_ACTIVE_ENTRY_UPDATE") then
       pcall(function() C_LFGList.RefreshResults() end)
+    end
+    if event == "LFG_LIST_APPLICATION_STATUS_UPDATED" then
+      -- arg1 = searchResultID, arg2 = newStatus
+      if EFJ.UI and EFJ.UI.MarkAppliedByID then
+        EFJ.UI:MarkAppliedByID(arg1, arg2)
+      end
     end
     C_Timer.After(0.05, function()
       if event == "SOCIAL_QUEUE_UPDATE" and EquiFastJoinDB.openOnQuickJoin and not IsInInstance() and not IsInGroup() and HasQuickJoinSuggestions() then
@@ -720,7 +848,9 @@ ev:SetScript("OnEvent", function(_,event,arg1)
           return
         end
       end
-      ProcessResultsAndMaybeShow(event)
+      if not EquiFastJoinDB.onlyQuickJoin then
+        ProcessResultsAndMaybeShow(event)
+      end
     end)
   end
 end)
@@ -729,7 +859,7 @@ end)
 local function EFJ_OpenOptions()
   if Settings and Settings.OpenToCategory then
     local category = Settings.GetCategory and Settings.GetCategory("EquiFastJoin")
-    if category then Settings.OpenToCategory(category.ID) return end
+    if category then Settings.OpenToCategory(category.ID or (category.GetID and category:GetID()) ) return end
   end
   if InterfaceOptionsFrame and InterfaceOptionsFrame_OpenToCategory and EFJ.Options and EFJ.Options.panel then
     InterfaceOptionsFrame_OpenToCategory(EFJ.Options.panel)
@@ -744,7 +874,12 @@ SlashCmdList["EFJ"] = function(msg)
   if msg == "test" then
     EFJ.UI:ShowTest()
   elseif msg == "show" then
-    ProcessResultsAndMaybeShow("SLASH")
+    if EquiFastJoinDB.onlyQuickJoin then
+      local entries = GatherQuickJoinEntries()
+      if entries and #entries > 0 then EFJ.UI:ShowQuickJoin(entries) else if EFJ.UI.frame then EFJ.UI.frame:Hide() end end
+    else
+      ProcessResultsAndMaybeShow("SLASH")
+    end
   elseif msg == "hide" then
     if EFJ.UI.frame then EFJ.UI.frame:Hide() end
   elseif msg == "debug on" then
