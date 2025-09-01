@@ -1,0 +1,8 @@
+## Interface: 110200
+## Title: EquiFastJoin
+## Notes: Event-driven LFG rendering (no manual search). Minimalist UI.
+## Author: ChatGPT
+## Version: 1.7.9
+## SavedVariables: EquiFastJoinDB
+
+EquiFastJoin.lua
