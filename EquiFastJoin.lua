@@ -143,7 +143,19 @@ local function TryJoin(id)
     if UIErrorsFrame then UIErrorsFrame:AddMessage("EFJ: Beitritt im Kampf gesperrt", 1, 0.2, 0.2) end
     return "combat"
   end
-  -- Do not open Blizzard's application dialog from addon code to avoid tainting
+  -- Prefer Blizzard's application dialog on user click (safe, out of combat)
+  local function OpenApplyDialog()
+    if not LFGListApplicationDialog or not LFGListApplicationDialog_Show then
+      pcall(LoadAddOn, "Blizzard_LFGList")
+      pcall(LoadAddOn, "Blizzard_LookingForGroupUI")
+    end
+    if LFGListApplicationDialog_Show and LFGListApplicationDialog then
+      LFGListApplicationDialog_Show(LFGListApplicationDialog, id)
+      return true
+    end
+    return false
+  end
+  if OpenApplyDialog() then return "dialog" end
   if not C_LFGList or not C_LFGList.ApplyToGroup then return "error" end
   local tank, healer, dps = false, false, false
   local spec = GetSpecialization and GetSpecialization()
@@ -180,6 +192,10 @@ local function TryJoinAndMark(row, id)
       row.join:SetText("Abmelden")
       row.join:SetScript("OnClick", function() CancelApplicationAndMark(row, id) end)
     end
+  elseif r == "dialog" then
+    -- Keep button enabled; user completes application in Blizzard dialog
+    C_Timer.After(0.5, function() if row then EFJ.UI:UpdateJoinButton(row, id) end end)
+    C_Timer.After(2.0, function() if row then EFJ.UI:UpdateJoinButton(row, id) end end)
   else
     if row and row.join then
       row.join:SetEnabled(true)

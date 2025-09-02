@@ -2,6 +2,7 @@
 
 ## 1.8.2
 - Fix taint: remove all calls to `C_LFGList.Search()` to eliminate `[ADDON_ACTION_BLOCKED] ... 'Search()'` errors.
+- Join UX: on click, open Blizzard application dialog for the listing (safe, out-of-combat); fallback to direct apply if dialog unavailable.
 - Join/cancel safety: disallow Join/Cancel while in combat; show a user-facing message instead.
 - UI safety: stop programmatically opening Blizzard LFG application dialog; remove FriendsFrame toggle from banner button.
 - Refresh policy: only call `C_LFGList.RefreshResults()` out of combat; keep periodic updates event-driven.
