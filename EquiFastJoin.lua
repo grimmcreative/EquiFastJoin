@@ -176,17 +176,15 @@ local function TryJoin(id)
     end
     return true
   end
-  -- Ensure result info exists; if not, search+refresh then apply shortly after
+  -- Avoid applying from a timer (can cause taint). Require fresh info now.
   if not C_LFGList.GetSearchResultInfo(id) then
+    -- Try to ensure results are fresh, then ask user to click again or use dialog.
     pcall(function() C_LFGList.Search(0, "", 0, 0) end)
-    C_Timer.After(0.2, function()
-      pcall(function() C_LFGList.RefreshResults() end)
-      C_Timer.After(0.2, doApply)
-    end)
-    return "applied"
-  else
-    return doApply() and "applied" or "error"
+    pcall(function() C_LFGList.RefreshResults() end)
+    if UIErrorsFrame then UIErrorsFrame:AddMessage("EFJ: Bitte erneut klicken", 1, 0.8, 0.2) end
+    return "retry"
   end
+  return doApply() and "applied" or "error"
 end
 
 local function TryJoinAndMark(row, id)
@@ -422,7 +420,11 @@ function EFJ.UI:ShowBanner(headline, subline)
   row.textNote:SetText("")
   row.join:SetText("OK")
   row.join:SetScript("OnClick", function()
-    if FriendsFrame and ToggleFriendsFrame then ToggleFriendsFrame(1) end
+    if InCombatLockdown and InCombatLockdown() then
+      if UIErrorsFrame then UIErrorsFrame:AddMessage("EFJ: Nicht im Kampf verfügbar", 1, 0.2, 0.2) end
+    else
+      if FriendsFrame and ToggleFriendsFrame then ToggleFriendsFrame(1) end
+    end
     self.frame:Hide()
   end)
   row.join:SetEnabled(true)
@@ -929,6 +931,10 @@ end)
 
 -- Slash commands --------------------------------------------------------------
 local function EFJ_OpenOptions()
+  if InCombatLockdown and InCombatLockdown() then
+    if UIErrorsFrame then UIErrorsFrame:AddMessage("EFJ: Optionen im Kampf gesperrt", 1, 0.2, 0.2) end
+    return
+  end
   if Settings and Settings.OpenToCategory then
     local category = Settings.GetCategory and Settings.GetCategory("EquiFastJoin")
     if category then Settings.OpenToCategory(category.ID or (category.GetID and category:GetID()) ) return end
@@ -939,7 +945,6 @@ local function EFJ_OpenOptions()
   end
 end
 
-SlashCmdList = SlashCmdList or {}
 SLASH_EFJ1 = "/efj"
 SlashCmdList["EFJ"] = function(msg)
   msg = (msg or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
