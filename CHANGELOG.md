@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.1
+- Taint mitigation: avoid ApplyToGroup from timers; prefer Blizzard application dialog.
+- Combat guards: block opening Options and Friends toggle in combat with user-facing hint.
+- Globals hygiene: stop reassigning `SlashCmdList` to reduce taint risk.
+
 ## 1.8.0
 - Quick Join gating: show only LFG results that also appear as Quick Join suggestions; hide generic LFG when none are available.
 - Classification helpers: robust detection of M+, Raid, Dungeon, PvP, and Custom via activity info and key level.

@@ -1,6 +1,6 @@
 
 -- EquiFastJoin - Retail 11.2.0
--- Version 1.7.9 (Event-driven: no manual Search; auto-open on LFG events)
+-- Version 1.8.1 (Event-driven: no manual Search; auto-open on LFG events)
 
 local ADDON_NAME = ...
 local EFJ = {}
