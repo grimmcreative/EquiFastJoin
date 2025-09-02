@@ -1,6 +1,6 @@
 
 -- EquiFastJoin - Retail 11.2.0
--- Version 1.8.2 (Event-driven: no manual Search; auto-open on LFG events)
+-- Version 1.8.3 (Event-driven: no manual Search; auto-open on LFG events)
 
 local ADDON_NAME = ...
 local EFJ = {}
@@ -238,12 +238,14 @@ end
 -- UI --------------------------------------------------------------------------
 EFJ.UI = { rows = {}, visibleIDs = {}, mode = "lfg" }
 local ROW_HEIGHT = 54
+local ROW_SPACING = 2
 local MAX_ROWS = 30
 
 local function CreateRow(parent, index)
   local row = CreateFrame("Frame", nil, parent)
   row:SetSize(parent:GetWidth()-20, ROW_HEIGHT)
   row:SetPoint("TOPLEFT", 4, -(index-1)*ROW_HEIGHT)
+  row.index = index
 
   row.iconLeader = row:CreateTexture(nil,"ARTWORK")
   row.iconLeader:SetSize(20,20); row.iconLeader:SetPoint("TOPLEFT",0,-2)
@@ -273,6 +275,50 @@ local function CreateRow(parent, index)
   row:Hide(); return row
 end
 
+-- Recalculate a row's height based on its text content to avoid overlaps
+function EFJ.UI:ComputeRowHeight(row)
+  if not row or not row:IsShown() then return ROW_HEIGHT end
+  local w = (self.frame and self.frame:GetWidth()) or (row:GetWidth()+20)
+  local textWidth = (w - 168)
+  if textWidth and textWidth > 50 then
+    row.textActivity:SetWidth(textWidth)
+    row.textNote:SetWidth(textWidth)
+  end
+  -- Force engine to update string metrics before measuring
+  row.textActivity:SetText(row.textActivity:GetText() or "")
+  row.textNote:SetText(row.textNote:GetText() or "")
+  local hActivity = math.ceil(row.textActivity:GetStringHeight() or 0)
+  local hNote = math.ceil(row.textNote:GetStringHeight() or 0)
+  local iconH = row.iconLeader:GetHeight() or 20
+  -- Layout: icon (top) + gap + activity + gap + note, minimum base
+  local contentH = math.max(iconH + 4 + hActivity + 2 + hNote, 26)
+  local h = math.max(ROW_HEIGHT, contentH + 6)
+  row:SetHeight(h)
+  return h
+end
+
+-- Position visible rows sequentially and resize the scroll content height
+function EFJ.UI:Relayout()
+  if not (self.frame and self.content) then return end
+  local y = 0
+  local total = 0
+  for i, row in ipairs(self.rows) do
+    if row:IsShown() then
+      local h = self:ComputeRowHeight(row)
+      row:ClearAllPoints()
+      row:SetPoint("TOPLEFT", self.content, "TOPLEFT", 4, -y)
+      y = y + h + ROW_SPACING
+      total = total + h + ROW_SPACING
+    else
+      -- keep hidden rows out of layout
+      row:ClearAllPoints()
+      row:SetPoint("TOPLEFT", self.content, "TOPLEFT", 4, -y)
+    end
+  end
+  total = math.max(total, ROW_HEIGHT) -- ensure some height for scroll child
+  self.content:SetHeight(total)
+end
+
 local function UpdateRowWidths(self)
   if not self.frame then return end
   local w = self.frame:GetWidth()
@@ -282,6 +328,8 @@ local function UpdateRowWidths(self)
     row.textActivity:SetWidth(w-168)
     row.textNote:SetWidth(w-168)
   end
+  -- Recalculate heights after a width change and relayout
+  self:Relayout()
 end
 
 function EFJ.UI:Create()
@@ -498,10 +546,13 @@ function EFJ.UI:ShowQuickJoin(entries)
       end
 
       row:Show()
+      -- ensure height fits content for this row
+      self:ComputeRowHeight(row)
     else
       row:Hide()
     end
   end
+  self:Relayout()
   if #filtered == 0 then
     if self.frame and self.frame:IsShown() then self.frame:Hide() end
     self.mode = "none"
@@ -612,6 +663,8 @@ function EFJ.UI:SetRows(ids)
         self:UpdateJoinButton(row, id)
 
         row:Show()
+        -- ensure height fits content for this row
+        self:ComputeRowHeight(row)
         table.insert(self.visibleIDs, id)
       else
         row.resultID = nil
@@ -622,6 +675,7 @@ function EFJ.UI:SetRows(ids)
       row:Hide()
     end
   end
+  self:Relayout()
 end
 
 local function ToastForIDs(ids)

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.3
+- UI layout: prevent overlapping list entries by dynamically computing row heights and relayouting visible rows.
+- Scrolling: adjust scroll content height to sum of visible rows; add small row spacing for readability.
+- Resize handling: recalc text widths/heights on frame resize to keep wrapping correct.
+
 ## 1.8.2
 - Fix taint: remove all calls to `C_LFGList.Search()` to eliminate `[ADDON_ACTION_BLOCKED] ... 'Search()'` errors.
 - Join UX: on click, open Blizzard application dialog for the listing (safe, out-of-combat); fallback to direct apply if dialog unavailable.
