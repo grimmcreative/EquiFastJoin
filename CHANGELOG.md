@@ -1,8 +1,16 @@
 # Changelog
 
+## 1.8.2
+- Fix taint: remove all calls to `C_LFGList.Search()` to eliminate `[ADDON_ACTION_BLOCKED] ... 'Search()'` errors.
+- Join/cancel safety: disallow Join/Cancel while in combat; show a user-facing message instead.
+- UI safety: stop programmatically opening Blizzard LFG application dialog; remove FriendsFrame toggle from banner button.
+- Refresh policy: only call `C_LFGList.RefreshResults()` out of combat; keep periodic updates event-driven.
+
 ## 1.8.1
-- Taint mitigation: avoid ApplyToGroup from timers; prefer Blizzard application dialog.
+- Taint mitigation: avoid ApplyToGroup from timers; remove programmatic opening of Blizzard application dialog to prevent taint.
+- Combat lockdown: block Join/Cancel while in combat to avoid protected actions.
 - Combat guards: block opening Options and Friends toggle in combat with user-facing hint.
+- LFG API: remove all calls to `C_LFGList.Search()`; only use safe `RefreshResults()` out of combat.
 - Globals hygiene: stop reassigning `SlashCmdList` to reduce taint risk.
 
 ## 1.8.0

@@ -1,6 +1,6 @@
 
 -- EquiFastJoin - Retail 11.2.0
--- Version 1.8.1 (Event-driven: no manual Search; auto-open on LFG events)
+-- Version 1.8.2 (Event-driven: no manual Search; auto-open on LFG events)
 
 local ADDON_NAME = ...
 local EFJ = {}
@@ -139,19 +139,11 @@ end
 -- Attempt to apply to a group with sensible default roles
 local function TryJoin(id)
   if not id then return "error" end
-  local function OpenApplyDialog()
-    local loaded = true
-    if not LFGListApplicationDialog or not LFGListApplicationDialog_Show then
-      loaded = pcall(LoadAddOn, "Blizzard_LookingForGroupUI") or pcall(LoadAddOn, "Blizzard_LFGList") or false
-    end
-    if LFGListApplicationDialog_Show and LFGListApplicationDialog then
-      LFGListApplicationDialog_Show(LFGListApplicationDialog, id)
-      return true
-    end
-    return false
+  if InCombatLockdown and InCombatLockdown() then
+    if UIErrorsFrame then UIErrorsFrame:AddMessage("EFJ: Beitritt im Kampf gesperrt", 1, 0.2, 0.2) end
+    return "combat"
   end
-  -- Prefer the Blizzard dialog for 100% reliability
-  if OpenApplyDialog() then return "dialog" end
+  -- Do not open Blizzard's application dialog from addon code to avoid tainting
   if not C_LFGList or not C_LFGList.ApplyToGroup then return "error" end
   local tank, healer, dps = false, false, false
   local spec = GetSpecialization and GetSpecialization()
@@ -176,14 +168,6 @@ local function TryJoin(id)
     end
     return true
   end
-  -- Avoid applying from a timer (can cause taint). Require fresh info now.
-  if not C_LFGList.GetSearchResultInfo(id) then
-    -- Try to ensure results are fresh, then ask user to click again or use dialog.
-    pcall(function() C_LFGList.Search(0, "", 0, 0) end)
-    pcall(function() C_LFGList.RefreshResults() end)
-    if UIErrorsFrame then UIErrorsFrame:AddMessage("EFJ: Bitte erneut klicken", 1, 0.8, 0.2) end
-    return "retry"
-  end
   return doApply() and "applied" or "error"
 end
 
@@ -196,10 +180,6 @@ local function TryJoinAndMark(row, id)
       row.join:SetText("Abmelden")
       row.join:SetScript("OnClick", function() CancelApplicationAndMark(row, id) end)
     end
-  elseif r == "dialog" then
-    -- Keep button enabled; user completes application in Blizzard dialog
-    C_Timer.After(0.5, function() if row then EFJ.UI:UpdateJoinButton(row, id) end end)
-    C_Timer.After(2.0, function() if row then EFJ.UI:UpdateJoinButton(row, id) end end)
   else
     if row and row.join then
       row.join:SetEnabled(true)
@@ -210,6 +190,10 @@ end
 
 local function CancelApplicationAndMark(row, id)
   if not id or not C_LFGList or not C_LFGList.CancelApplication then return end
+  if InCombatLockdown and InCombatLockdown() then
+    if UIErrorsFrame then UIErrorsFrame:AddMessage("EFJ: Abmelden im Kampf gesperrt", 1, 0.2, 0.2) end
+    return
+  end
   local ok, err = pcall(function() C_LFGList.CancelApplication(id) end)
   if not ok and UIErrorsFrame and err then
     UIErrorsFrame:AddMessage("EFJ: Abmelden fehlgeschlagen", 1, 0.2, 0.2)
@@ -422,8 +406,6 @@ function EFJ.UI:ShowBanner(headline, subline)
   row.join:SetScript("OnClick", function()
     if InCombatLockdown and InCombatLockdown() then
       if UIErrorsFrame then UIErrorsFrame:AddMessage("EFJ: Nicht im Kampf verfügbar", 1, 0.2, 0.2) end
-    else
-      if FriendsFrame and ToggleFriendsFrame then ToggleFriendsFrame(1) end
     end
     self.frame:Hide()
   end)
@@ -712,40 +694,38 @@ GatherQuickJoinEntries = function()
     -- Only show QuickJoin entries that map to an eligible LFG listing
     if lfgListID and (not seen[lfgListID]) then
       local res = GetFreshResultInfo(lfgListID)
-      if res then
-        seen[lfgListID] = true
-        local leaderName, leaderClass
-        local memberClasses = {}
-        if players and #players>0 then
-          local m = players[1]
-          local name
-          if SocialQueueUtil_GetRelationshipInfo then
-            local n = SocialQueueUtil_GetRelationshipInfo(m.guid, nil, m.clubId)
-            name = type(n) == 'string' and n:gsub("|r", "") or nil
-          end
-          if not name then
-            local n2 = GetPlayerInfoByGUID(m.guid)
-            name = (type(n2)=="string" and n2) or (type(n2)=="table" and n2[1]) or "-"
-          end
-          leaderName = name
-          local _, _, _, _, classFile = GetPlayerInfoByGUID(m.guid)
-          leaderClass = classFile
-          for i=1,math.min(#players,8) do
-            local _, _, _, _, classFile2 = GetPlayerInfoByGUID(players[i].guid)
-            if classFile2 then table.insert(memberClasses, classFile2) end
-          end
+      seen[lfgListID] = true
+      local leaderName, leaderClass
+      local memberClasses = {}
+      if players and #players>0 then
+        local m = players[1]
+        local name
+        if SocialQueueUtil_GetRelationshipInfo then
+          local n = SocialQueueUtil_GetRelationshipInfo(m.guid, nil, m.clubId)
+          name = type(n) == 'string' and n:gsub("|r", "") or nil
         end
-        table.insert(out, {
-          guid=guid,
-          lfgID=lfgListID,
-          leaderName=leaderName or "-",
-          leaderClass=leaderClass,
-          activityText=res.activityText or res.name or "Unbekannte Aktivität",
-          comment=res.name or res.comment or "",
-          memberClasses=memberClasses,
-          res=res,
-        })
+        if not name then
+          local n2 = GetPlayerInfoByGUID(m.guid)
+          name = (type(n2)=="string" and n2) or (type(n2)=="table" and n2[1]) or "-"
+        end
+        leaderName = name
+        local _, _, _, _, classFile = GetPlayerInfoByGUID(m.guid)
+        leaderClass = classFile
+        for i=1,math.min(#players,8) do
+          local _, _, _, _, classFile2 = GetPlayerInfoByGUID(players[i].guid)
+          if classFile2 then table.insert(memberClasses, classFile2) end
+        end
       end
+      table.insert(out, {
+        guid=guid,
+        lfgID=lfgListID,
+        leaderName=leaderName or "-",
+        leaderClass=leaderClass,
+        activityText=(res and (res.activityText or res.name)) or "Schnellbeitritt",
+        comment=(res and (res.name or res.comment)) or "",
+        memberClasses=memberClasses,
+        res=res,
+      })
     end
   end
   return out
@@ -890,16 +870,15 @@ ev:SetScript("OnEvent", function(_,event,...)
       EFJ.Options:Create()
     end
     DBG("Addon geladen. Initialisiere Aktualisierung.")
-    -- Initial search and periodic refresh for LFG results
+    -- Initial gentle refresh for LFG results (no protected Search calls)
     C_Timer.After(1.0, function()
-      pcall(function() C_LFGList.Search(0, "", 0, 0) end)
+      pcall(function() if not (InCombatLockdown and InCombatLockdown()) then C_LFGList.RefreshResults() end end)
       C_Timer.After(0.5, function()
-        pcall(function() C_LFGList.RefreshResults() end)
         ProcessResultsAndMaybeShow("INIT")
       end)
     end)
     C_Timer.NewTicker(10, function()
-      pcall(function() C_LFGList.RefreshResults() end)
+      pcall(function() if not (InCombatLockdown and InCombatLockdown()) then C_LFGList.RefreshResults() end end)
       ProcessResultsAndMaybeShow("TICK")
     end)
   else
@@ -907,7 +886,7 @@ ev:SetScript("OnEvent", function(_,event,...)
     if (event == "LFG_LIST_SEARCH_RESULT_UPDATED"
       or event == "LFG_LIST_SEARCH_RESULTS_RECEIVED"
       or event == "LFG_LIST_ACTIVE_ENTRY_UPDATE") then
-      pcall(function() C_LFGList.RefreshResults() end)
+      pcall(function() if not (InCombatLockdown and InCombatLockdown()) then C_LFGList.RefreshResults() end end)
     end
     if event == "LFG_LIST_APPLICATION_STATUS_UPDATED" then
       -- arg1 = searchResultID, arg2 = newStatus
