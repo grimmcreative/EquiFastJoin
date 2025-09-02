@@ -4,7 +4,7 @@
 ## Notes: Event-driven LFG rendering (no manual search). Minimalist UI.
 ## Notes-deDE: Zeigt Schnellbeitritt/LFG-Einträge und ermöglicht Direktbeitritt.
 ## Author: Maximilian Grimm | grimm@grimmcreative.com
-## Version: 1.7.9
+## Version: 1.8.0
 ## SavedVariables: EquiFastJoinDB
 ## DefaultState: enabled
 ## IconTexture: Interface/AddOns/EquiFastJoin/Media/LogoAddon

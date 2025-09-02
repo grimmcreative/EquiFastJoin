@@ -19,7 +19,6 @@ local DEFAULTS = {
   rel = "CENTER",
   x = 0, y = 0,
   -- Filters & UX
-  onlyQuickJoin = true,
   showRaids = true,
   showDungeons = true,
   showMythicPlus = true,
@@ -61,6 +60,39 @@ local function ColorizeByClass(name, classEN)
   return name
 end
 
+-- Robust activity helpers -----------------------------------------------------
+local function GetActivityInfoForRes(res)
+  if not res then return nil end
+  local activityID = res.activityID
+  if (not activityID) and type(res.activityIDs) == "table" and #res.activityIDs > 0 then
+    activityID = res.activityIDs[1]
+  end
+  if activityID then
+    return C_LFGList.GetActivityInfoTable(activityID)
+  end
+  return nil
+end
+
+local function ClassifyResult(res)
+  -- Returns one of: "MPLUS","RAID","DUNGEON","PVP","CUSTOM","OTHER"
+  if not res then return "OTHER" end
+  local act = GetActivityInfoForRes(res) or {}
+  local name = (act and act.fullName) or res.activityText or res.name or ""
+  local isMPlus = (res.isMythicPlusActivity == true)
+                  or (tonumber(res.keyLevel) and tonumber(res.keyLevel) > 0)
+                  or (act and (act.isMythicPlusActivity == true))
+                  or (act and act.difficultyID == 8)
+                  or (type(name) == "string" and name:find("%+"))
+  if isMPlus then return "MPLUS" end
+  local categoryID = act.categoryID
+  -- Use category mapping for non-M+ content
+  if categoryID == 2 then return "RAID" end
+  if categoryID == 1 then return "DUNGEON" end
+  if categoryID == 3 or categoryID == 4 then return "PVP" end
+  if categoryID == 6 then return "CUSTOM" end
+  return "OTHER"
+end
+
 -- LFG helpers -----------------------------------------------------------------
 -- Forward declare helpers used across sections
 local FindLeaderClass
@@ -99,6 +131,7 @@ end
 local function GetFreshResultInfo(id)
   local info = C_LFGList.GetSearchResultInfo(id)
   if not info then return nil end
+  if info.isDelisted then return nil end
   info.activityText = BuildActivityText(info)
   return info
 end
@@ -195,16 +228,13 @@ end
 
 local function ResultMatchesFilters(res)
   if not res then return false end
-  local act = res.activityID and C_LFGList.GetActivityInfoTable(res.activityID) or nil
-  local category = act and act.categoryID or nil
-  if res.isMythicPlusActivity or (act and act.fullName and act.fullName:find("%+")) then
-    return EquiFastJoinDB.showMythicPlus
-  end
-  if category == 2 then return EquiFastJoinDB.showRaids end
-  if category == 1 then return EquiFastJoinDB.showDungeons end
-  if category == 3 or category == 4 then return EquiFastJoinDB.showPvP end
-  if category == 6 then return EquiFastJoinDB.showCustom end
-  return true
+  local kind = ClassifyResult(res)
+  if kind == "MPLUS" then return EquiFastJoinDB.showMythicPlus end
+  if kind == "RAID" then return EquiFastJoinDB.showRaids end
+  if kind == "DUNGEON" then return EquiFastJoinDB.showDungeons end
+  if kind == "PVP" then return EquiFastJoinDB.showPvP end
+  if kind == "CUSTOM" then return EquiFastJoinDB.showCustom end
+  return false
 end
 
 -- UI --------------------------------------------------------------------------
@@ -427,7 +457,7 @@ function EFJ.UI:ShowQuickJoin(entries)
   self.visibleIDs = {}
   local filtered = {}
   for _,e in ipairs(entries) do
-    if not e.res or ResultMatchesFilters(e.res) then table.insert(filtered, e) end
+    if e.res and ResultMatchesFilters(e.res) then table.insert(filtered, e) end
   end
   for i,row in ipairs(self.rows) do
     local e = filtered[i]
@@ -649,18 +679,12 @@ local function HasQuickJoinSuggestions()
 end
 
 BuildCategoryColor = function(res)
-  local act = res.activityID and C_LFGList.GetActivityInfoTable(res.activityID)
-  if res.isMythicPlusActivity or (act and act.fullName and act.fullName:find("%+")) then
-    return "|cff00ff88" -- green-ish
-  elseif act and act.categoryID==2 then
-    return "|cffffa000" -- orange (raid)
-  elseif act and act.categoryID==1 then
-    return "|cff4fb2ff" -- blue (dungeon)
-  elseif act and (act.categoryID==3 or act.categoryID==4) then
-    return "|cffff4f4f" -- red (pvp)
-  elseif act and act.categoryID==6 then
-    return "|cffbfbfbf" -- grey (custom/quests)
-  end
+  local kind = ClassifyResult(res)
+  if kind == "MPLUS" then return "|cff00ff88" end -- green-ish
+  if kind == "RAID" then return "|cffffa000" end -- orange
+  if kind == "DUNGEON" then return "|cff4fb2ff" end -- blue
+  if kind == "PVP" then return "|cffff4f4f" end -- red
+  if kind == "CUSTOM" then return "|cffbfbfbf" end -- grey
   return "|cffffffff"
 end
 
@@ -669,6 +693,7 @@ GatherQuickJoinEntries = function()
   if not C_SocialQueue or not C_SocialQueue.GetAllGroups then return {} end
   local groups = C_SocialQueue.GetAllGroups() or {}
   local out = {}
+  local seen = {}
   for _, guid in ipairs(groups) do
     local players = C_SocialQueue.GetGroupMembers(guid)
     local queues = C_SocialQueue.GetGroupQueues and C_SocialQueue.GetGroupQueues(guid)
@@ -683,9 +708,10 @@ GatherQuickJoinEntries = function()
       end
     end
     -- Only show QuickJoin entries that map to an eligible LFG listing
-    if lfgListID then
+    if lfgListID and (not seen[lfgListID]) then
       local res = GetFreshResultInfo(lfgListID)
       if res then
+        seen[lfgListID] = true
         local leaderName, leaderClass
         local memberClasses = {}
         if players and #players>0 then
@@ -726,9 +752,26 @@ end
 local function ProcessResultsAndMaybeShow(origin)
   if IsInInstance() or IsInGroup() or IsInRaid() then return end
   -- If QuickJoin view is active, don't override it with LFG updates
-  if EquiFastJoinDB.onlyQuickJoin or (EFJ.UI and EFJ.UI.mode == "quickjoin") then return end
+  if EFJ.UI and EFJ.UI.mode == "quickjoin" then return end
   local ids = GatherResults()
   DBG("Process", origin or "update", "#ids:", #ids)
+  if #ids==0 then
+    EFJ.UI.visibleIDs = {}
+    EFJ.UI:HideIfEmpty()
+    return
+  end
+  -- Only show results that also appear in QuickJoin suggestions
+  local quick = GatherQuickJoinEntries() or {}
+  if #quick > 0 then
+    local quickSet = {}
+    for _, e in ipairs(quick) do if e.lfgID then quickSet[e.lfgID] = true end end
+    local filtered = {}
+    for _, id in ipairs(ids) do if quickSet[id] then table.insert(filtered, id) end end
+    ids = filtered
+  else
+    -- If there are no QuickJoin suggestions, don't show generic LFG lists
+    ids = {}
+  end
   if #ids==0 then
     EFJ.UI.visibleIDs = {}
     EFJ.UI:HideIfEmpty()
@@ -820,9 +863,8 @@ ev:SetScript("OnEvent", function(_,event,...)
         AddCheck("PvP anzeigen", "Zeigt PvP-Gruppen", "showPvP", 220, y)
         y = y - 28
         AddCheck("Benutzerdefiniert/Quest anzeigen", "Zeigt benutzerdefinierte/Quest-Gruppen", "showCustom", 16, y)
-        AddCheck("Bei Schnellbeitritt auto-öffnen", "Öffnet Liste bei QuickJoin Vorschlägen", "openOnQuickJoin", 220, y)
         y = y - 28
-        AddCheck("Nur Schnellbeitritt anzeigen", "Versteckt allgemeine LFG-Ergebnisse", "onlyQuickJoin", 16, y)
+        AddCheck("Bei Schnellbeitritt auto-öffnen", "Öffnet Liste bei QuickJoin Vorschlägen", "openOnQuickJoin", 16, y)
         y = y - 28
         AddCheck("Sound abspielen", "Spielt einen kurzen Sound beim Öffnen", "playSound", 16, y)
         AddCheck("Toast Nachricht", "Zeigt eine RaidWarning Toast", "showToast", 220, y)
@@ -846,23 +888,21 @@ ev:SetScript("OnEvent", function(_,event,...)
       EFJ.Options:Create()
     end
     DBG("Addon geladen. Initialisiere Aktualisierung.")
-    if not EquiFastJoinDB.onlyQuickJoin then
-      -- Optional: initial LFG search & periodic refresh when not restricted to Quick Join
-      C_Timer.After(1.0, function()
-        pcall(function() C_LFGList.Search(0, "", 0, 0) end)
-        C_Timer.After(0.5, function()
-          pcall(function() C_LFGList.RefreshResults() end)
-          ProcessResultsAndMaybeShow("INIT")
-        end)
-      end)
-      C_Timer.NewTicker(10, function()
+    -- Initial search and periodic refresh for LFG results
+    C_Timer.After(1.0, function()
+      pcall(function() C_LFGList.Search(0, "", 0, 0) end)
+      C_Timer.After(0.5, function()
         pcall(function() C_LFGList.RefreshResults() end)
-        ProcessResultsAndMaybeShow("TICK")
+        ProcessResultsAndMaybeShow("INIT")
       end)
-    end
+    end)
+    C_Timer.NewTicker(10, function()
+      pcall(function() C_LFGList.RefreshResults() end)
+      ProcessResultsAndMaybeShow("TICK")
+    end)
   else
     -- On relevant activity or quick-join updates, refresh and re-evaluate
-    if (not EquiFastJoinDB.onlyQuickJoin) and (event == "LFG_LIST_SEARCH_RESULT_UPDATED"
+    if (event == "LFG_LIST_SEARCH_RESULT_UPDATED"
       or event == "LFG_LIST_SEARCH_RESULTS_RECEIVED"
       or event == "LFG_LIST_ACTIVE_ENTRY_UPDATE") then
       pcall(function() C_LFGList.RefreshResults() end)
@@ -881,9 +921,8 @@ ev:SetScript("OnEvent", function(_,event,...)
           return
         end
       end
-      if not EquiFastJoinDB.onlyQuickJoin then
-        ProcessResultsAndMaybeShow(event)
-      end
+      -- Otherwise show regular LFG results if available
+      ProcessResultsAndMaybeShow(event)
     end)
   end
 end)
@@ -907,12 +946,8 @@ SlashCmdList["EFJ"] = function(msg)
   if msg == "test" then
     EFJ.UI:ShowTest()
   elseif msg == "show" then
-    if EquiFastJoinDB.onlyQuickJoin then
-      local entries = GatherQuickJoinEntries()
-      if entries and #entries > 0 then EFJ.UI:ShowQuickJoin(entries) else if EFJ.UI.frame then EFJ.UI.frame:Hide() end end
-    else
-      ProcessResultsAndMaybeShow("SLASH")
-    end
+    local entries = GatherQuickJoinEntries()
+    if entries and #entries > 0 then EFJ.UI:ShowQuickJoin(entries) else if EFJ.UI.frame then EFJ.UI.frame:Hide() end end
   elseif msg == "hide" then
     if EFJ.UI.frame then EFJ.UI.frame:Hide() end
   elseif msg == "debug on" then

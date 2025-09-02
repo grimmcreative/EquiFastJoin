@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.8.0
+- Quick Join gating: show only LFG results that also appear as Quick Join suggestions; hide generic LFG when none are available.
+- Classification helpers: robust detection of M+, Raid, Dungeon, PvP, and Custom via activity info and key level.
+- Filters rework: rely on classification; unknown categories are hidden by default.
+- Colors: derive category color from the new classification.
+- Deduplication: avoid duplicate Quick Join entries per LFG listing.
+- Stability: ignore delisted results; require valid result data for display.
+- Options/UI: remove "Nur Schnellbeitritt anzeigen"; reposition "Bei Schnellbeitritt auto-öffnen".
+- Refresh flow: always run initial search and periodic refresh; correct INIT/TICK handling.
+- Slash: "show" now uses Quick Join list only.
+
 ## 1.7.9
 - Quick Join focus: show only real Quick Join (friends/guild/community) suggestions by default, with optional LFG results.
 - Event-driven updates: auto-open on Quick Join suggestions; periodic cleanup and hide when empty.
@@ -10,5 +21,4 @@
 - Role icons: show remaining roles (Tank/Healer/DPS) for LFG results.
 - Options: Only Quick Join, Auto-open on Quick Join, Sound, Toast, Scale, Lock frame.
 - Slash: /efj test|show|hide|options|debug on|off.
-- AddOn icon via TOC: Icons/LogoAddon.tga.
-
+- AddOn icon via TOC: Icons/EFJ-ICON.TGA.
