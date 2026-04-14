@@ -28,7 +28,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. Addon appears in the WoW addon list as enabled (not grayed out as "out of date")
   2. No Lua load error fires on character login
   3. `C_AddOns.LoadAddOn()` is called with a backwards-compatible fallback for the Blizzard LFG dialog
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 01-01-PLAN.md — Update TOC Interface version to 120005 and replace LoadAddOn with C_AddOns.LoadAddOn
 
 ### Phase 2: API Compatibility
 **Goal**: All core addon features (LFG listing, join button, options panel) work correctly on Midnight with no blocked actions or missing UI elements
@@ -81,7 +83,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. TOC & Load Gate | 0/TBD | Not started | - |
+| 1. TOC & Load Gate | 0/1 | Planned | - |
 | 2. API Compatibility | 0/TBD | Not started | - |
 | 3. Localization System | 0/TBD | Not started | - |
 | 4. Modularization | 0/TBD | Not started | - |
