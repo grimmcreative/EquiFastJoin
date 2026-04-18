@@ -85,7 +85,9 @@ Plans:
   1. No legacy fallback stubs remain (InterfaceOptions_AddCategory, activityID primary path, old LoadAddOn calls)
   2. All forward declarations that spanned sections in the monolith are resolved into the module where the function lives
   3. Function and variable names follow a consistent convention throughout all module files
-**Plans**: TBD
+**Plans:** 1 plan
+Plans:
+- [ ] 05-01-PLAN.md — Remove legacy stubs, verify forward declarations and naming consistency
 
 ## Progress
 
@@ -98,4 +100,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. API Compatibility | 2/2 | Complete | 2026-04-18 |
 | 3. Localization System | 2/2 | Complete | 2026-04-18 |
 | 4. Modularization | 4/4 | Complete | 2026-04-18 |
-| 5. Code Quality | 0/TBD | Not started | - |
+| 5. Code Quality | 0/1 | Not started | - |
