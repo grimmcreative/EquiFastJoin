@@ -41,7 +41,10 @@ Plans:
   2. Join button opens the Blizzard application dialog from inside and outside instances without ADDON_ACTION_BLOCKED
   3. Options panel opens via `/efj options` with a working scale slider and all controls visible
   4. Filter toggles (Dungeons, Raids, M+, PvP, Custom) correctly include or exclude listings for new Midnight content types
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 02-01-PLAN.md — Remove dead API paths (activityID, InterfaceOptions, OptionsSliderTemplate)
+- [ ] 02-02-PLAN.md — Add Midnight API support (generalPlaystyle, Secret Values hardening)
 
 ### Phase 3: Localization System
 **Goal**: All UI strings are served from a localization table — English-locale users see English, German-locale users see German, and no hardcoded German strings remain in the main Lua file
@@ -84,7 +87,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. TOC & Load Gate | 1/1 | Complete | 2026-04-18 |
-| 2. API Compatibility | 0/TBD | Not started | - |
+| 2. API Compatibility | 0/2 | Not started | - |
 | 3. Localization System | 0/TBD | Not started | - |
 | 4. Modularization | 0/TBD | Not started | - |
 | 5. Code Quality | 0/TBD | Not started | - |
