@@ -131,7 +131,8 @@ end
 local function GetFreshResultInfo(id)
   local info = C_LFGList.GetSearchResultInfo(id)
   if not info then return nil end
-  if info.isDelisted then return nil end
+  -- isDelisted may be a Secret Value in endgame/instance content (Midnight 12.0+)
+  if not (issecretvalue and issecretvalue(info.isDelisted)) and info.isDelisted then return nil end
   info.activityText = BuildActivityText(info)
   return info
 end
@@ -175,7 +176,11 @@ local function TryJoin(id)
       C_LFGList.ApplyToGroup(id, "", tank, healer, dps)
     end)
     if not ok and UIErrorsFrame and err then
-      UIErrorsFrame:AddMessage("EFJ: Bewerbung fehlgeschlagen", 1, 0.2, 0.2)
+      local msg = "EFJ: Bewerbung fehlgeschlagen"
+      if type(err) == "string" and err:find("[Bb]locked") then
+        msg = "EFJ: Aktion blockiert (Taint)"
+      end
+      UIErrorsFrame:AddMessage(msg, 1, 0.2, 0.2)
       DBG("ApplyToGroup error:", err)
       return false
     end
