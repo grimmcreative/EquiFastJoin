@@ -12,7 +12,7 @@ The addon is currently broken on WoW Midnight (12.x) and exposes only German str
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: TOC & Load Gate** - Update Interface version and fix load-blocking API calls so the addon loads on Midnight
+- [x] **Phase 1: TOC & Load Gate** - Update Interface version and fix load-blocking API calls so the addon loads on Midnight (completed 2026-04-18)
 - [ ] **Phase 2: API Compatibility** - Fix all broken Midnight APIs so core functionality (join, filter, options) works correctly
 - [ ] **Phase 3: Localization System** - Create the L-table with enUS primary and deDE override, replace all hardcoded strings
 - [ ] **Phase 4: Modularization** - Split monolithic Lua into separate files with correct TOC load order
@@ -30,7 +30,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. `C_AddOns.LoadAddOn()` is called with a backwards-compatible fallback for the Blizzard LFG dialog
 **Plans:** 1 plan
 Plans:
-- [ ] 01-01-PLAN.md — Update TOC Interface version to 120005 and replace LoadAddOn with C_AddOns.LoadAddOn
+- [x] 01-01-PLAN.md — Update TOC Interface version to 120005 and replace LoadAddOn with C_AddOns.LoadAddOn
 
 ### Phase 2: API Compatibility
 **Goal**: All core addon features (LFG listing, join button, options panel) work correctly on Midnight with no blocked actions or missing UI elements
@@ -83,7 +83,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. TOC & Load Gate | 0/1 | Planned | - |
+| 1. TOC & Load Gate | 1/1 | Complete | 2026-04-18 |
 | 2. API Compatibility | 0/TBD | Not started | - |
 | 3. Localization System | 0/TBD | Not started | - |
 | 4. Modularization | 0/TBD | Not started | - |
