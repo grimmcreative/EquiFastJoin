@@ -165,7 +165,7 @@ local GatherQuickJoinEntries
 local SetRoleIconsFromLFG
 
 local function BuildActivityText(res)
-  if not res then return "Unbekannte Aktivität" end
+  if not res then return L["Unknown Activity"] end
   local act = GetActivityInfoForRes(res)
   if act then
     if act.fullName and act.fullName ~= "" then
@@ -184,7 +184,7 @@ local function BuildActivityText(res)
     if level and level > 0 then return ("Mythic+ +%d"):format(level) end
     return "Mythic+"
   end
-  return "Unbekannte Aktivität"
+  return L["Unknown Activity"]
 end
 
 local function GetFreshResultInfo(id)
@@ -200,7 +200,7 @@ end
 local function TryJoin(id)
   if not id then return "error" end
   if InCombatLockdown and InCombatLockdown() then
-    if UIErrorsFrame then UIErrorsFrame:AddMessage("EFJ: Beitritt im Kampf gesperrt", 1, 0.2, 0.2) end
+    if UIErrorsFrame then UIErrorsFrame:AddMessage(L["EFJ: Join blocked in combat"], 1, 0.2, 0.2) end
     return "combat"
   end
   -- Prefer Blizzard's application dialog on user click (safe, out of combat)
@@ -235,9 +235,9 @@ local function TryJoin(id)
       C_LFGList.ApplyToGroup(id, "", tank, healer, dps)
     end)
     if not ok and UIErrorsFrame and err then
-      local msg = "EFJ: Bewerbung fehlgeschlagen"
+      local msg = L["EFJ: Application failed"]
       if type(err) == "string" and err:find("[Bb]locked") then
-        msg = "EFJ: Aktion blockiert (Taint)"
+        msg = L["EFJ: Action blocked (Taint)"]
       end
       UIErrorsFrame:AddMessage(msg, 1, 0.2, 0.2)
       DBG("ApplyToGroup error:", err)
@@ -254,7 +254,7 @@ local function TryJoinAndMark(row, id)
     if row and row.join then
       row.join:SetEnabled(true)
       row.join:SetAlpha(1)
-      row.join:SetText("Abmelden")
+      row.join:SetText(L["Leave"])
       row.join:SetScript("OnClick", function() CancelApplicationAndMark(row, id) end)
     end
   elseif r == "dialog" then
@@ -272,12 +272,12 @@ end
 local function CancelApplicationAndMark(row, id)
   if not id or not C_LFGList or not C_LFGList.CancelApplication then return end
   if InCombatLockdown and InCombatLockdown() then
-    if UIErrorsFrame then UIErrorsFrame:AddMessage("EFJ: Abmelden im Kampf gesperrt", 1, 0.2, 0.2) end
+    if UIErrorsFrame then UIErrorsFrame:AddMessage(L["EFJ: Leave blocked in combat"], 1, 0.2, 0.2) end
     return
   end
   local ok, err = pcall(function() C_LFGList.CancelApplication(id) end)
   if not ok and UIErrorsFrame and err then
-    UIErrorsFrame:AddMessage("EFJ: Abmelden fehlgeschlagen", 1, 0.2, 0.2)
+    UIErrorsFrame:AddMessage(L["EFJ: Leave failed"], 1, 0.2, 0.2)
     DBG("CancelApplication error:", err)
     return
   end
@@ -285,7 +285,7 @@ local function CancelApplicationAndMark(row, id)
   if row and row.join then
     row.join:SetEnabled(false)
     row.join:SetAlpha(0.5)
-    row.join:SetText("Abgemeldet")
+    row.join:SetText(L["Left"])
   end
 end
 
@@ -335,7 +335,7 @@ local function CreateRow(parent, index)
   row.textNote:SetJustifyH("LEFT")
 
   row.join = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
-  row.join:SetSize(84,26); row.join:SetPoint("RIGHT",-32,0); row.join:SetText("Beitreten")
+  row.join:SetSize(84,26); row.join:SetPoint("RIGHT",-32,0); row.join:SetText(L["Join"])
 
   row:Hide(); return row
 end
@@ -461,16 +461,16 @@ function EFJ.UI:UpdateJoinButton(row, id)
   if appStatus == "applied" or pendingStatus then
     row.join:SetEnabled(true)
     row.join:SetAlpha(1)
-    row.join:SetText("Abmelden")
+    row.join:SetText(L["Leave"])
     row.join:SetScript("OnClick", function() CancelApplicationAndMark(row, id) end)
   elseif appStatus == "invited" then
     row.join:SetEnabled(false)
     row.join:SetAlpha(0.6)
-    row.join:SetText("Eingeladen")
+    row.join:SetText(L["Invited"])
   else
     row.join:SetEnabled(true)
     row.join:SetAlpha(1)
-    row.join:SetText("Beitreten")
+    row.join:SetText(L["Join"])
     row.join:SetScript("OnClick", function() TryJoinAndMark(row, id) end)
   end
 end
@@ -483,17 +483,17 @@ function EFJ.UI:MarkAppliedByID(id, newStatus)
       if newStatus == "applied" or newStatus == "applied_with_role" then
         row.join:SetEnabled(true)
         row.join:SetAlpha(1)
-        row.join:SetText("Abmelden")
+        row.join:SetText(L["Leave"])
         row.join:SetScript("OnClick", function() CancelApplicationAndMark(row, id) end)
       elseif newStatus == "invited" then
         row.join:SetEnabled(false)
         row.join:SetAlpha(0.6)
-        row.join:SetText("Eingeladen")
+        row.join:SetText(L["Invited"])
       elseif newStatus == "declined" or newStatus == "declined_full" or newStatus == "declined_delisted" or newStatus == "timedout" or newStatus == "cancelled" or newStatus == "none" then
         if EFJ.State and EFJ.State.applications then EFJ.State.applications[id] = nil end
         row.join:SetEnabled(true)
         row.join:SetAlpha(1)
-        row.join:SetText("Beitreten")
+        row.join:SetText(L["Join"])
         row.join:SetScript("OnClick", function() TryJoinAndMark(row, id) end)
       end
       break
@@ -526,15 +526,15 @@ function EFJ.UI:ShowBanner(headline, subline)
   self:Create()
   for i,row in ipairs(self.rows) do row:Hide() end
   local row = self.rows[1]
-  row.textLeader:SetText(headline or "Schnellbeitritt")
+  row.textLeader:SetText(headline or L["Quick Join"])
   row.iconLeader:SetTexture(134400) -- chat bubble
   row.iconLeader:SetTexCoord(0,1,0,1)
-  row.textActivity:SetText(subline or "Es sind neue Schnellbeitritt-Vorschläge verfügbar.")
+  row.textActivity:SetText(subline or L["New Quick Join suggestions available."])
   row.textNote:SetText("")
-  row.join:SetText("OK")
+  row.join:SetText(L["OK"])
   row.join:SetScript("OnClick", function()
     if InCombatLockdown and InCombatLockdown() then
-      if UIErrorsFrame then UIErrorsFrame:AddMessage("EFJ: Nicht im Kampf verfügbar", 1, 0.2, 0.2) end
+      if UIErrorsFrame then UIErrorsFrame:AddMessage(L["EFJ: Not available in combat"], 1, 0.2, 0.2) end
     end
     self.frame:Hide()
   end)
@@ -546,7 +546,7 @@ function EFJ.UI:ShowBanner(headline, subline)
 end
 
 function EFJ.UI:ShowTest()
-  self:ShowBanner("EquiFastJoin Test", "Dies ist ein Testeintrag.")
+  self:ShowBanner("EquiFastJoin Test", L["This is a test entry."])
 end
 
 local function SetQuickJoinMemberIcons(row, classes)
@@ -599,13 +599,13 @@ function EFJ.UI:ShowQuickJoin(entries)
 
       if e.lfgID then
         row.join:SetEnabled(true); row.join:SetAlpha(1)
-        row.join:SetText("Beitreten")
+        row.join:SetText(L["Join"])
         row.join:SetScript("OnClick", function() TryJoinAndMark(row, e.lfgID) end)
         row.resultID = e.lfgID
         self:UpdateJoinButton(row, e.lfgID)
       else
         row.join:SetEnabled(false); row.join:SetAlpha(0.4)
-        row.join:SetText("Nicht LFG")
+        row.join:SetText(L["Not in LFG"])
         row.join:SetScript("OnClick", nil)
         row.resultID = nil
       end
@@ -717,12 +717,12 @@ function EFJ.UI:SetRows(ids)
         end
 
         local color = BuildCategoryColor(res)
-        row.textActivity:SetText((color.."%s|r"):format(res.activityText or "Unbekannte Aktivität"))
+        row.textActivity:SetText((color.."%s|r"):format(res.activityText or L["Unknown Activity"]))
         row.textNote:SetText(res.name or res.comment or "")
         if SetRoleIconsFromLFG then SetRoleIconsFromLFG(row, id) end
 
         row.join:SetEnabled(true); row.join:SetAlpha(1)
-        row.join:SetText("Beitreten")
+        row.join:SetText(L["Join"])
         row.join:SetScript("OnClick", function() TryJoinAndMark(row, id) end)
         row.resultID = id
         self:UpdateJoinButton(row, id)
@@ -749,7 +749,7 @@ local function ToastForIDs(ids)
   local id = ids[1]
   local res = GetFreshResultInfo(id); if not res then return end
   local act = GetActivityInfoForRes(res)
-  local text = res.activityText or "Neuer Eintrag"
+  local text = res.activityText or L["New Entry"]
   local color = "|cffffffff"
   if res.isMythicPlusActivity or (act and act.fullName and act.fullName:find("%+")) then
     color="|cff00ff88" -- green-ish
@@ -856,7 +856,7 @@ GatherQuickJoinEntries = function()
         lfgID=lfgListID,
         leaderName=leaderName or "-",
         leaderClass=leaderClass,
-        activityText=(res and (res.activityText or res.name)) or "Schnellbeitritt",
+        activityText=(res and (res.activityText or res.name)) or L["Quick Join"],
         comment=(res and (res.name or res.comment)) or "",
         memberClasses=memberClasses,
         res=res,
@@ -923,7 +923,7 @@ ev:SetScript("OnEvent", function(_,event,...)
         local panel=CreateFrame("Frame", "EquiFastJoinOptions", UIParent); panel.name="EquiFastJoin"
         local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
         title:SetPoint("TOPLEFT", 16, -16)
-        title:SetText("EquiFastJoin Optionen")
+        title:SetText(L["EquiFastJoin Options"])
 
         local function AddCheck(text, tooltip, key, x, y)
           local cb = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
@@ -974,25 +974,25 @@ ev:SetScript("OnEvent", function(_,event,...)
         end
 
         local y = -48
-        AddCheck("Dungeons anzeigen", "Zeigt Dungeon-Gruppen", "showDungeons", 16, y)
-        AddCheck("Raids/Schlachtzüge anzeigen", "Zeigt Raid-Gruppen", "showRaids", 220, y)
+        AddCheck(L["Show Dungeons"], L["Show dungeons"], "showDungeons", 16, y)
+        AddCheck(L["Show Raids"], L["Show raids"], "showRaids", 220, y)
         y = y - 28
-        AddCheck("Mythic+ anzeigen", "Zeigt M+ Gruppen", "showMythicPlus", 16, y)
-        AddCheck("PvP anzeigen", "Zeigt PvP-Gruppen", "showPvP", 220, y)
+        AddCheck(L["Show Mythic+"], L["Show M+ groups"], "showMythicPlus", 16, y)
+        AddCheck(L["Show PvP"], L["Show PvP groups"], "showPvP", 220, y)
         y = y - 28
-        AddCheck("Benutzerdefiniert/Quest anzeigen", "Zeigt benutzerdefinierte/Quest-Gruppen", "showCustom", 16, y)
+        AddCheck(L["Show Custom/Quest"], L["Show custom/quest groups"], "showCustom", 16, y)
         y = y - 28
-        AddCheck("Bei Schnellbeitritt auto-öffnen", "Öffnet Liste bei QuickJoin Vorschlägen", "openOnQuickJoin", 16, y)
+        AddCheck(L["Auto-open on Quick Join"], L["Opens list on Quick Join suggestions"], "openOnQuickJoin", 16, y)
         y = y - 28
-        AddCheck("Sound abspielen", "Spielt einen kurzen Sound beim Öffnen", "playSound", 16, y)
-        AddCheck("Toast Nachricht", "Zeigt eine RaidWarning Toast", "showToast", 220, y)
+        AddCheck(L["Play Sound"], L["Plays a short sound on open"], "playSound", 16, y)
+        AddCheck(L["Toast Message"], L["Shows a RaidWarning toast"], "showToast", 220, y)
         y = y - 28
-        AddCheck("Rahmen sperren", "Verhindert Verschieben des Fensters", "lockFrame", 16, y)
+        AddCheck(L["Lock Frame"], L["Prevents moving the window"], "lockFrame", 16, y)
         y = y - 48
-        AddSlider("Skalierung", "scale", 0.75, 1.50, 0.05, 16, y)
+        AddSlider(L["Scale"], "scale", 0.75, 1.50, 0.05, 16, y)
         y = y - 64
-        AddButton("Testfenster", 16, y, function() EFJ.UI:ShowTest() end)
-        AddButton("Jetzt aktualisieren", 200, y, function() ProcessResultsAndMaybeShow("OPT_BTN") end)
+        AddButton(L["Test Window"], 16, y, function() EFJ.UI:ShowTest() end)
+        AddButton(L["Refresh Now"], 200, y, function() ProcessResultsAndMaybeShow("OPT_BTN") end)
 
         -- Register options in new Settings UI (Retail) or old Interface Options
         if Settings and Settings.RegisterCanvasLayoutCategory and Settings.RegisterAddOnCategory then
@@ -1045,7 +1045,7 @@ end)
 -- Slash commands --------------------------------------------------------------
 local function EFJ_OpenOptions()
   if InCombatLockdown and InCombatLockdown() then
-    if UIErrorsFrame then UIErrorsFrame:AddMessage("EFJ: Optionen im Kampf gesperrt", 1, 0.2, 0.2) end
+    if UIErrorsFrame then UIErrorsFrame:AddMessage(L["EFJ: Options blocked in combat"], 1, 0.2, 0.2) end
     return
   end
   if Settings and Settings.OpenToCategory then
@@ -1069,12 +1069,12 @@ SlashCmdList["EFJ"] = function(msg)
   elseif msg == "hide" then
     if EFJ.UI.frame then EFJ.UI.frame:Hide() end
   elseif msg == "debug on" then
-    EquiFastJoinDB.debug = true; print("EFJ: Debug an")
+    EquiFastJoinDB.debug = true; print("EFJ: Debug on")
   elseif msg == "debug off" then
-    EquiFastJoinDB.debug = false; print("EFJ: Debug aus")
+    EquiFastJoinDB.debug = false; print("EFJ: Debug off")
   elseif msg == "options" or msg == "opt" then
     EFJ_OpenOptions()
   else
-    print("EFJ: Verwende /efj test | show | hide | options | debug on|off")
+    print("EFJ: Usage: /efj test | show | hide | options | debug on|off")
   end
 end
