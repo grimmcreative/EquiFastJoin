@@ -1,4 +1,4 @@
-## Interface: 110200
+## Interface: 120005
 ## Title: EquiFastJoin
 ## Title-deDE: EquiFastJoin
 ## Notes: Event-driven LFG rendering (no manual search). Minimalist UI.
