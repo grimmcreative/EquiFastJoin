@@ -2,7 +2,7 @@
 
 ## What This Is
 
-EquiFastJoin is a lightweight World of Warcraft Retail addon that surfaces Quick Join (friends/guild/community) suggestions and LFG listings in a compact, event-driven UI with one-click group joining. Published on CurseForge for the WoW community.
+EquiFastJoin is a lightweight World of Warcraft Retail addon that surfaces Quick Join (friends/guild/community) suggestions and LFG listings in a compact, event-driven UI with one-click group joining. Published on CurseForge for the WoW community. Fully compatible with WoW Midnight (12.x), localized for enUS and deDE, and modularized into 7 focused files.
 
 ## Core Value
 
@@ -21,62 +21,57 @@ One-click group joining — users see relevant groups and join instantly without
 - ✓ Event-driven updates without manual search — existing
 - ✓ Combat lockdown guards — existing
 - ✓ SavedVariables persistence — existing
+- ✓ WoW Midnight (12.x) compatibility — v2.0 (Interface 120005, C_AddOns.LoadAddOn, generalPlaystyle, Secret Values hardening)
+- ✓ Modularization — v2.0 (7 files: Locales, Core, Data, Logic, UI, Events, SlashCommands)
+- ✓ English localization — v2.0 (L-table with enUS primary, 35 deDE overrides, metatable fallback)
+- ✓ Code quality — v2.0 (no dead code, consistent naming, resolved forward declarations)
 
 ### Active
 
-- [ ] WoW Midnight (12.x) compatibility — update Interface version, fix broken APIs
-- [ ] Modularization — split monolithic Lua into separate files (UI, Logic, Events, Localization)
-- [ ] English localization — replace hardcoded German strings with localization system
-- [ ] Code quality improvements — clean structure, naming, documentation for maintainability
+(No active requirements — next milestone will define new goals)
 
 ### Out of Scope
 
-- New features beyond current functionality — focus is compatibility and quality first
+- Additional locales (frFR, esES, etc.) — deferred to v3
+- CurseForge localization integration — deferred to v3
+- Minimap button toggle — deferred to v3
+- Delisted group detection — deferred to v3
 - Mobile companion integration — WoW addon only
 - Classic/Wrath/Cata support — Retail only
 
 ## Context
 
-- Addon is currently broken on WoW Midnight (12.x) — does not load due to outdated TOC Interface version (110200)
-- Beyond TOC version, Midnight may have changed C_LFGList, C_SocialQueue, or UI template APIs
-- All UI strings are hardcoded in German — needs localization system for CurseForge audience
-- Single-file architecture (1016 lines in EquiFastJoin.lua) — needs modularization for maintainability
-- Existing codebase map available in .planning/codebase/
-- Published addon with external users on CurseForge — changes must not break existing user experience
-- GitHub Actions CI already configured for tagged releases
+- Shipped v2.0 with 1,085 LOC Lua across 7 module files
+- Tech stack: Lua 5.1 (WoW addon API), no external dependencies
+- Architecture: Modular files with `local _, EFJ = ...` namespace pattern
+- Localization: L-table with metatable fallback, enUS keys, deDE overrides
+- API: Uses C_LFGList, C_SocialQueue, C_Timer, C_AddOns (all Midnight-compatible)
+- Published on CurseForge with GitHub Actions CI for tagged releases
+- 8 human UAT items pending live WoW Midnight client verification
 
 ## Constraints
 
-- **Tech stack**: Lua (WoW addon API), no external build tools unless necessary
+- **Tech stack**: Lua (WoW addon API), no external build tools
 - **Compatibility**: Must work with WoW Midnight (12.x) live servers
-- **Backwards compat**: SavedVariables (EquiFastJoinDB) must migrate cleanly for existing users
+- **Backwards compat**: SavedVariables (EquiFastJoinDB) must migrate cleanly
 - **API surface**: Must use only public, non-tainted WoW API calls
-- **Localization**: English as primary, German as secondary (current strings preserved)
+- **Localization**: English as primary, German as secondary
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Modularize into separate files | Single 1016-line file is hard to maintain and navigate | — Pending |
-| Add localization system | Hardcoded German blocks international adoption | — Pending |
-| Research Midnight API changes before coding | Avoid guessing — verify what actually changed | — Pending |
+| Modularize into 7 separate files | Single 1081-line file was hard to maintain | ✓ Good — clean dependency chain |
+| Add L-table localization system | Hardcoded German blocked international adoption | ✓ Good — 35 strings, metatable fallback |
+| Research Midnight API changes before coding | Avoid guessing — verify what actually changed | ✓ Good — found activityIDs change, Secret Values |
+| Standalone L-table (no AceLocale) | Overkill for 2-locale addon | ✓ Good — zero dependencies |
+| Nil-guard pattern for deprecated APIs | Backwards compat without conditional branches | ✓ Good — reused in Phase 2 |
+| issecretvalue guards for Secret Values | Midnight taint system can throw on field access | ✓ Good — defensive, nil-guarded |
+| UISliderTemplateWithLabels for slider | OptionsSliderTemplate status uncertain on Midnight | ✓ Good — simpler than conditional |
 
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
 
-**After each phase transition** (via `/gsd-transition`):
-1. Requirements invalidated? → Move to Out of Scope with reason
-2. Requirements validated? → Move to Validated with phase reference
-3. New requirements emerged? → Add to Active
-4. Decisions to log? → Add to Key Decisions
-5. "What This Is" still accurate? → Update if drifted
-
-**After each milestone** (via `/gsd-complete-milestone`):
-1. Full review of all sections
-2. Core Value check — still the right priority?
-3. Audit Out of Scope — reasons still valid?
-4. Update Context with current state
-
 ---
-*Last updated: 2026-04-14 after initialization*
+*Last updated: 2026-04-18 after v2.0 milestone*
