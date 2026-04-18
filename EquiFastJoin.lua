@@ -925,8 +925,6 @@ ev:SetScript("OnEvent", function(_,event,...)
         if Settings and Settings.RegisterCanvasLayoutCategory and Settings.RegisterAddOnCategory then
           local category = Settings.RegisterCanvasLayoutCategory(panel, "EquiFastJoin")
           Settings.RegisterAddOnCategory(category)
-        elseif InterfaceOptions_AddCategory then
-          InterfaceOptions_AddCategory(panel)
         end
         self.panel=panel
       end
