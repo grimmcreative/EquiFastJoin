@@ -1,5 +1,5 @@
 
--- EquiFastJoin - Retail 11.2.0
+-- EquiFastJoin - Retail 12.0.5 (Midnight)
 -- Version 1.8.3 (Event-driven: no manual Search; auto-open on LFG events)
 
 local ADDON_NAME = ...
@@ -146,8 +146,9 @@ local function TryJoin(id)
   -- Prefer Blizzard's application dialog on user click (safe, out of combat)
   local function OpenApplyDialog()
     if not LFGListApplicationDialog or not LFGListApplicationDialog_Show then
-      pcall(LoadAddOn, "Blizzard_LFGList")
-      pcall(LoadAddOn, "Blizzard_LookingForGroupUI")
+      local _LoadAddOn = (C_AddOns and C_AddOns.LoadAddOn) or LoadAddOn
+      pcall(_LoadAddOn, "Blizzard_LFGList")
+      pcall(_LoadAddOn, "Blizzard_LookingForGroupUI")
     end
     if LFGListApplicationDialog_Show and LFGListApplicationDialog then
       LFGListApplicationDialog_Show(LFGListApplicationDialog, id)
