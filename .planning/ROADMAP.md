@@ -69,7 +69,12 @@ Plans:
   2. All modules share state exclusively via the addon namespace (`local _, EFJ = ...`) with no `_G` pollution
   3. TOC lists all files in dependency order (Locales first, Events second-to-last, SlashCommands last)
   4. Addon loads and all Phase 1-3 success criteria still pass after the split
-**Plans**: TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 04-01-PLAN.md — Create Locales.lua and Core.lua (foundation modules)
+- [ ] 04-02-PLAN.md — Create Data.lua and Logic.lua (data and processing modules)
+- [ ] 04-03-PLAN.md — Create UI.lua (display module)
+- [ ] 04-04-PLAN.md — Create Events.lua and SlashCommands.lua, rewrite TOC, delete monolith
 **UI hint**: yes
 
 ### Phase 5: Code Quality
@@ -92,5 +97,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. TOC & Load Gate | 1/1 | Complete | 2026-04-18 |
 | 2. API Compatibility | 2/2 | Complete | 2026-04-18 |
 | 3. Localization System | 2/2 | Complete | 2026-04-18 |
-| 4. Modularization | 0/TBD | Not started | - |
+| 4. Modularization | 0/4 | Not started | - |
 | 5. Code Quality | 0/TBD | Not started | - |
