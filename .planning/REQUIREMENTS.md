@@ -19,10 +19,10 @@ Requirements for Addon v2.0 release. Each maps to roadmap phases.
 
 ### Localization
 
-- [ ] **LOCA-01**: Standalone L-Table mit Metatable-Fallback erstellen (kein AceLocale)
-- [ ] **LOCA-02**: enUS als Primary-Locale mit allen UI-Strings
-- [ ] **LOCA-03**: deDE Override-Locale mit aktuellen deutschen Strings
-- [ ] **LOCA-04**: TOC `## Title-deDE:` und `## Notes-deDE:` Tags hinzufügen
+- [x] **LOCA-01**: Standalone L-Table mit Metatable-Fallback erstellen (kein AceLocale)
+- [x] **LOCA-02**: enUS als Primary-Locale mit allen UI-Strings
+- [x] **LOCA-03**: deDE Override-Locale mit aktuellen deutschen Strings
+- [x] **LOCA-04**: TOC `## Title-deDE:` und `## Notes-deDE:` Tags hinzufügen
 - [ ] **LOCA-05**: Alle hardcoded deutschen Strings in EquiFastJoin.lua durch L["key"] ersetzen
 
 ### Modularization
@@ -75,10 +75,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COMP-05 | Phase 2 | Complete |
 | COMP-06 | Phase 2 | Complete |
 | COMP-07 | Phase 2 | Complete |
-| LOCA-01 | Phase 3 | Pending |
-| LOCA-02 | Phase 3 | Pending |
-| LOCA-03 | Phase 3 | Pending |
-| LOCA-04 | Phase 3 | Pending |
+| LOCA-01 | Phase 3 | Complete (03-01) |
+| LOCA-02 | Phase 3 | Complete (03-01) |
+| LOCA-03 | Phase 3 | Complete (03-01) |
+| LOCA-04 | Phase 3 | Complete (03-01) |
 | LOCA-05 | Phase 3 | Pending |
 | MODR-01 | Phase 4 | Pending |
 | MODR-02 | Phase 4 | Pending |

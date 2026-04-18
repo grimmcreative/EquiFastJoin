@@ -57,7 +57,7 @@ Plans:
   4. Any string key missing from a locale falls back to the key string rather than erroring
 **Plans:** 2 plans
 Plans:
-- [ ] 03-01-PLAN.md — Create L-table with metatable fallback and deDE override block
+- [x] 03-01-PLAN.md — Create L-table with metatable fallback and deDE override block
 - [ ] 03-02-PLAN.md — Replace all hardcoded German strings with L["key"] calls
 
 ### Phase 4: Modularization
@@ -91,6 +91,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. TOC & Load Gate | 1/1 | Complete | 2026-04-18 |
 | 2. API Compatibility | 2/2 | Complete | 2026-04-18 |
-| 3. Localization System | 0/2 | Not started | - |
+| 3. Localization System | 1/2 | In progress | - |
 | 4. Modularization | 0/TBD | Not started | - |
 | 5. Code Quality | 0/TBD | Not started | - |
