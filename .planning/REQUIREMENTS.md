@@ -27,9 +27,9 @@ Requirements for Addon v2.0 release. Each maps to roadmap phases.
 
 ### Modularization
 
-- [ ] **MODR-01**: Monolith in separate Dateien aufteilen (Locales, Core, Data, UI, Events)
-- [ ] **MODR-02**: Addon-Namespace Pattern (`local _, EFJ = ...`) für State-Sharing
-- [ ] **MODR-03**: TOC Loading Order korrekt nach Abhängigkeiten ordnen
+- [x] **MODR-01**: Monolith in separate Dateien aufteilen (Locales, Core, Data, UI, Events)
+- [x] **MODR-02**: Addon-Namespace Pattern (`local _, EFJ = ...`) für State-Sharing
+- [x] **MODR-03**: TOC Loading Order korrekt nach Abhängigkeiten ordnen
 
 ### Code Quality
 
@@ -80,9 +80,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LOCA-03 | Phase 3 | Complete (03-01) |
 | LOCA-04 | Phase 3 | Complete (03-01) |
 | LOCA-05 | Phase 3 | Complete (03-02) |
-| MODR-01 | Phase 4 | Pending |
-| MODR-02 | Phase 4 | Pending |
-| MODR-03 | Phase 4 | Pending |
+| MODR-01 | Phase 4 | Complete |
+| MODR-02 | Phase 4 | Complete |
+| MODR-03 | Phase 4 | Complete |
 | QUAL-01 | Phase 5 | Pending |
 | QUAL-02 | Phase 5 | Pending |
 | QUAL-03 | Phase 5 | Pending |

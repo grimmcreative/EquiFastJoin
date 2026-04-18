@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-03-PLAN.md. Ready for Plan 04.
-last_updated: "2026-04-18T09:06:35Z"
-last_activity: 2026-04-18 -- Completed 04-03 UI module
+stopped_at: Completed 04-04-PLAN.md. Phase 04 complete. Ready for Phase 05.
+last_updated: "2026-04-18T09:10:17Z"
+last_activity: 2026-04-18 -- Completed 04-04 Events/SlashCommands/monolith deletion
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 9
-  completed_plans: 8
-  percent: 89
+  completed_plans: 9
+  percent: 100
 ---
 
 # Project State
@@ -25,20 +25,20 @@ See: .planning/PROJECT.md (updated 2026-04-14)
 
 ## Current Position
 
-Phase: 04 (modularization) — EXECUTING
-Plan: 4 of 4
-Status: Executing Phase 04
-Last activity: 2026-04-18 -- Completed 04-03 UI module
+Phase: 04 (modularization) — COMPLETE
+Plan: 4 of 4 (done)
+Status: Phase 04 complete. Ready for Phase 05.
+Last activity: 2026-04-18 -- Completed 04-04 Events/SlashCommands/monolith deletion
 
-Progress: [█████████░] 89%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 8
+- Total plans completed: 9
 - Average duration: ~1.4 min
-- Total execution time: ~13.0 min
+- Total execution time: ~14.6 min
 
 **By Phase:**
 
@@ -47,11 +47,11 @@ Progress: [█████████░] 89%
 | 01 | 1 | ~2 min | ~2 min |
 | 02 | 2 | 150s | 75s |
 | 03 | 2 | 226s | 113s |
-| 04 | 3 | 309s | 103s |
+| 04 | 4 | 405s | 101s |
 
 **Recent Trend:**
 
-- Last 5 plans: 03-01 (63s), 03-02 (163s), 04-01 (94s), 04-02 (113s), 04-03 (102s)
+- Last 5 plans: 03-02 (163s), 04-01 (94s), 04-02 (113s), 04-03 (102s), 04-04 (96s)
 - Trend: fast surgical edits
 
 *Updated after each plan completion*
@@ -78,6 +78,8 @@ Recent decisions affecting current work:
 - 04-02: normalizeName kept file-local in Data.lua (only used by FindLeaderClass)
 - 04-02: Monolith forward declarations resolved into direct definitions in Data.lua
 - 04-03: EFJ.UI table initialized in UI.lua; CreateRow/UpdateRowWidths/SetQuickJoinMemberIcons/ToastForIDs kept file-local
+- 04-04: Options panel stays in Events.lua (triggered by ADDON_LOADED, tightly coupled to init)
+- 04-04: Monolith deleted via git rm; 7-file modular architecture complete
 
 ### Pending Todos
 
@@ -100,5 +102,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-04-18
-Stopped at: Completed 04-03-PLAN.md. Ready for 04-04.
+Stopped at: Completed 04-04-PLAN.md. Phase 04 complete. Ready for Phase 05.
 Resume file: None

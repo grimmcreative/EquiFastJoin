@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: TOC & Load Gate** - Update Interface version and fix load-blocking API calls so the addon loads on Midnight (completed 2026-04-18)
 - [x] **Phase 2: API Compatibility** - Fix all broken Midnight APIs so core functionality (join, filter, options) works correctly (completed 2026-04-18)
 - [x] **Phase 3: Localization System** - Create the L-table with enUS primary and deDE override, replace all hardcoded strings (completed 2026-04-18)
-- [ ] **Phase 4: Modularization** - Split monolithic Lua into separate files with correct TOC load order
+- [x] **Phase 4: Modularization** - Split monolithic Lua into separate files with correct TOC load order (completed 2026-04-18)
 - [ ] **Phase 5: Code Quality** - Remove dead code, clean naming conventions, resolve forward declarations into modules
 
 ## Phase Details
@@ -74,7 +74,7 @@ Plans:
 - [x] 04-01-PLAN.md — Create Locales.lua and Core.lua (foundation modules)
 - [x] 04-02-PLAN.md — Create Data.lua and Logic.lua (data and processing modules)
 - [x] 04-03-PLAN.md — Create UI.lua (display module)
-- [ ] 04-04-PLAN.md — Create Events.lua and SlashCommands.lua, rewrite TOC, delete monolith
+- [x] 04-04-PLAN.md — Create Events.lua and SlashCommands.lua, rewrite TOC, delete monolith
 **UI hint**: yes
 
 ### Phase 5: Code Quality
@@ -97,5 +97,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. TOC & Load Gate | 1/1 | Complete | 2026-04-18 |
 | 2. API Compatibility | 2/2 | Complete | 2026-04-18 |
 | 3. Localization System | 2/2 | Complete | 2026-04-18 |
-| 4. Modularization | 3/4 | In progress | - |
+| 4. Modularization | 4/4 | Complete | 2026-04-18 |
 | 5. Code Quality | 0/TBD | Not started | - |
