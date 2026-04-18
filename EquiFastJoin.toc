@@ -9,4 +9,10 @@
 ## DefaultState: enabled
 ## IconTexture: Interface/AddOns/EquiFastJoin/Media/LogoAddon
 
-EquiFastJoin.lua
+Locales.lua
+Core.lua
+Data.lua
+Logic.lua
+UI.lua
+Events.lua
+SlashCommands.lua
