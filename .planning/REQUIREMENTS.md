@@ -23,7 +23,7 @@ Requirements for Addon v2.0 release. Each maps to roadmap phases.
 - [x] **LOCA-02**: enUS als Primary-Locale mit allen UI-Strings
 - [x] **LOCA-03**: deDE Override-Locale mit aktuellen deutschen Strings
 - [x] **LOCA-04**: TOC `## Title-deDE:` und `## Notes-deDE:` Tags hinzufügen
-- [ ] **LOCA-05**: Alle hardcoded deutschen Strings in EquiFastJoin.lua durch L["key"] ersetzen
+- [x] **LOCA-05**: Alle hardcoded deutschen Strings in EquiFastJoin.lua durch L["key"] ersetzen
 
 ### Modularization
 
@@ -79,7 +79,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LOCA-02 | Phase 3 | Complete (03-01) |
 | LOCA-03 | Phase 3 | Complete (03-01) |
 | LOCA-04 | Phase 3 | Complete (03-01) |
-| LOCA-05 | Phase 3 | Pending |
+| LOCA-05 | Phase 3 | Complete (03-02) |
 | MODR-01 | Phase 4 | Pending |
 | MODR-02 | Phase 4 | Pending |
 | MODR-03 | Phase 4 | Pending |

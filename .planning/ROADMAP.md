@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: TOC & Load Gate** - Update Interface version and fix load-blocking API calls so the addon loads on Midnight (completed 2026-04-18)
 - [x] **Phase 2: API Compatibility** - Fix all broken Midnight APIs so core functionality (join, filter, options) works correctly (completed 2026-04-18)
-- [ ] **Phase 3: Localization System** - Create the L-table with enUS primary and deDE override, replace all hardcoded strings
+- [x] **Phase 3: Localization System** - Create the L-table with enUS primary and deDE override, replace all hardcoded strings (completed 2026-04-18)
 - [ ] **Phase 4: Modularization** - Split monolithic Lua into separate files with correct TOC load order
 - [ ] **Phase 5: Code Quality** - Remove dead code, clean naming conventions, resolve forward declarations into modules
 
@@ -58,7 +58,7 @@ Plans:
 **Plans:** 2 plans
 Plans:
 - [x] 03-01-PLAN.md — Create L-table with metatable fallback and deDE override block
-- [ ] 03-02-PLAN.md — Replace all hardcoded German strings with L["key"] calls
+- [x] 03-02-PLAN.md — Replace all hardcoded German strings with L["key"] calls
 
 ### Phase 4: Modularization
 **Goal**: The monolithic EquiFastJoin.lua is replaced by separate focused files loaded in correct dependency order via the TOC
@@ -91,6 +91,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. TOC & Load Gate | 1/1 | Complete | 2026-04-18 |
 | 2. API Compatibility | 2/2 | Complete | 2026-04-18 |
-| 3. Localization System | 1/2 | In progress | - |
+| 3. Localization System | 2/2 | Complete | 2026-04-18 |
 | 4. Modularization | 0/TBD | Not started | - |
 | 5. Code Quality | 0/TBD | Not started | - |
