@@ -11,9 +11,9 @@ Requirements for Addon v2.0 release. Each maps to roadmap phases.
 
 - [ ] **COMP-01**: TOC Interface-Version auf 120005 updaten
 - [ ] **COMP-02**: `LoadAddOn()` durch `C_AddOns.LoadAddOn()` ersetzen mit Backwards-Fallback
-- [ ] **COMP-03**: `activityID` → `activityIDs` Codepfad konsolidieren (toter Primary-Branch entfernen)
-- [ ] **COMP-04**: Legacy `InterfaceOptions_AddCategory` Fallback entfernen
-- [ ] **COMP-05**: `OptionsSliderTemplate` durch Midnight-kompatibles Template ersetzen
+- [x] **COMP-03**: `activityID` → `activityIDs` Codepfad konsolidieren (toter Primary-Branch entfernen)
+- [x] **COMP-04**: Legacy `InterfaceOptions_AddCategory` Fallback entfernen
+- [x] **COMP-05**: `OptionsSliderTemplate` durch Midnight-kompatibles Template ersetzen
 - [ ] **COMP-06**: `generalPlaystyle` Feld für neue Content-Typen in ClassifyResult() nutzen
 - [ ] **COMP-07**: Secret Values Taint-Hardening für In-Instance-Nutzung
 
@@ -70,9 +70,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | COMP-01 | Phase 1 | Pending |
 | COMP-02 | Phase 1 | Pending |
-| COMP-03 | Phase 2 | Pending |
-| COMP-04 | Phase 2 | Pending |
-| COMP-05 | Phase 2 | Pending |
+| COMP-03 | Phase 2 | Complete |
+| COMP-04 | Phase 2 | Complete |
+| COMP-05 | Phase 2 | Complete |
 | COMP-06 | Phase 2 | Pending |
 | COMP-07 | Phase 2 | Pending |
 | LOCA-01 | Phase 3 | Pending |
