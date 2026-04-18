@@ -33,9 +33,9 @@ Requirements for Addon v2.0 release. Each maps to roadmap phases.
 
 ### Code Quality
 
-- [ ] **QUAL-01**: Tote Codepfade und Legacy-Fallbacks entfernen
-- [ ] **QUAL-02**: Forward Declarations sauber in richtige Module auflösen
-- [ ] **QUAL-03**: Konsistente Namenskonventionen durchsetzen
+- [x] **QUAL-01**: Tote Codepfade und Legacy-Fallbacks entfernen
+- [x] **QUAL-02**: Forward Declarations sauber in richtige Module auflösen
+- [x] **QUAL-03**: Konsistente Namenskonventionen durchsetzen
 
 ## v2 Requirements
 
@@ -83,9 +83,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MODR-01 | Phase 4 | Complete |
 | MODR-02 | Phase 4 | Complete |
 | MODR-03 | Phase 4 | Complete |
-| QUAL-01 | Phase 5 | Pending |
-| QUAL-02 | Phase 5 | Pending |
-| QUAL-03 | Phase 5 | Pending |
+| QUAL-01 | Phase 5 | Complete |
+| QUAL-02 | Phase 5 | Complete |
+| QUAL-03 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 18 total

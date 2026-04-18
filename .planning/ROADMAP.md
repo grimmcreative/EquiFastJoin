@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: API Compatibility** - Fix all broken Midnight APIs so core functionality (join, filter, options) works correctly (completed 2026-04-18)
 - [x] **Phase 3: Localization System** - Create the L-table with enUS primary and deDE override, replace all hardcoded strings (completed 2026-04-18)
 - [x] **Phase 4: Modularization** - Split monolithic Lua into separate files with correct TOC load order (completed 2026-04-18)
-- [ ] **Phase 5: Code Quality** - Remove dead code, clean naming conventions, resolve forward declarations into modules
+- [x] **Phase 5: Code Quality** - Remove dead code, clean naming conventions, resolve forward declarations into modules (completed 2026-04-18)
 
 ## Phase Details
 
@@ -87,7 +87,7 @@ Plans:
   3. Function and variable names follow a consistent convention throughout all module files
 **Plans:** 1 plan
 Plans:
-- [ ] 05-01-PLAN.md — Remove legacy stubs, verify forward declarations and naming consistency
+- [x] 05-01-PLAN.md — Remove legacy stubs, verify forward declarations and naming consistency
 
 ## Progress
 
@@ -100,4 +100,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. API Compatibility | 2/2 | Complete | 2026-04-18 |
 | 3. Localization System | 2/2 | Complete | 2026-04-18 |
 | 4. Modularization | 4/4 | Complete | 2026-04-18 |
-| 5. Code Quality | 0/1 | Not started | - |
+| 5. Code Quality | 1/1 | Complete | 2026-04-18 |
