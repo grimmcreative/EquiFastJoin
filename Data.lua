@@ -88,7 +88,7 @@ end
 EFJ.GetFreshResultInfo = GetFreshResultInfo
 
 -- Join logic ------------------------------------------------------------------
--- Forward declare for mutual reference
+-- Forward declaration: TryJoinAndMark references CancelApplicationAndMark (defined below)
 local CancelApplicationAndMark
 
 local function TryJoin(id)
