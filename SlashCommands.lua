@@ -13,10 +13,6 @@ local function EFJ_OpenOptions()
     local category = Settings.GetCategory and Settings.GetCategory("EquiFastJoin")
     if category then Settings.OpenToCategory(category.ID or (category.GetID and category:GetID()) ) return end
   end
-  if InterfaceOptionsFrame and InterfaceOptionsFrame_OpenToCategory and EFJ.Options and EFJ.Options.panel then
-    InterfaceOptionsFrame_OpenToCategory(EFJ.Options.panel)
-    InterfaceOptionsFrame_OpenToCategory(EFJ.Options.panel)
-  end
 end
 
 SLASH_EFJ1 = "/efj"

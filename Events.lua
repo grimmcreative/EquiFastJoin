@@ -106,7 +106,7 @@ ev:SetScript("OnEvent", function(_,event,...)
       end
       EFJ.Options:Create()
     end
-    DBG("Addon geladen. Initialisiere Aktualisierung.")
+    DBG("Addon loaded. Initializing refresh.")
     C_Timer.After(1.0, function()
       pcall(function() if not (InCombatLockdown and InCombatLockdown()) then C_LFGList.RefreshResults() end end)
       C_Timer.After(0.5, function()

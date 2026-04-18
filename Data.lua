@@ -99,7 +99,7 @@ local function TryJoin(id)
   end
   local function OpenApplyDialog()
     if not LFGListApplicationDialog or not LFGListApplicationDialog_Show then
-      local _LoadAddOn = (C_AddOns and C_AddOns.LoadAddOn) or LoadAddOn
+      local _LoadAddOn = C_AddOns.LoadAddOn
       pcall(_LoadAddOn, "Blizzard_LFGList")
       pcall(_LoadAddOn, "Blizzard_LookingForGroupUI")
     end
