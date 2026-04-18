@@ -63,12 +63,8 @@ end
 -- Robust activity helpers -----------------------------------------------------
 local function GetActivityInfoForRes(res)
   if not res then return nil end
-  local activityID = res.activityID
-  if (not activityID) and type(res.activityIDs) == "table" and #res.activityIDs > 0 then
-    activityID = res.activityIDs[1]
-  end
-  if activityID then
-    return C_LFGList.GetActivityInfoTable(activityID)
+  if type(res.activityIDs) == "table" and #res.activityIDs > 0 then
+    return C_LFGList.GetActivityInfoTable(res.activityIDs[1])
   end
   return nil
 end
@@ -103,13 +99,9 @@ local SetRoleIconsFromLFG
 
 local function BuildActivityText(res)
   if not res then return "Unbekannte Aktivität" end
-  local activityID = res.activityID
-  if (not activityID) and type(res.activityIDs)=="table" and #res.activityIDs>0 then
-    activityID = res.activityIDs[1]
-  end
-  if activityID then
-    local act = C_LFGList.GetActivityInfoTable(activityID)
-    if act and act.fullName and act.fullName ~= "" then
+  local act = GetActivityInfoForRes(res)
+  if act then
+    if act.fullName and act.fullName ~= "" then
       if (res.isMythicPlusActivity or res.keyLevel) then
         local level = res.keyLevel and tonumber(res.keyLevel)
         if level and level > 0 then
@@ -684,7 +676,7 @@ local function ToastForIDs(ids)
   if #ids == 0 then return end
   local id = ids[1]
   local res = GetFreshResultInfo(id); if not res then return end
-  local act = res.activityID and C_LFGList.GetActivityInfoTable(res.activityID)
+  local act = GetActivityInfoForRes(res)
   local text = res.activityText or "Neuer Eintrag"
   local color = "|cffffffff"
   if res.isMythicPlusActivity or (act and act.fullName and act.fullName:find("%+")) then
