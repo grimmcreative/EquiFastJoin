@@ -13,7 +13,7 @@ The addon is currently broken on WoW Midnight (12.x) and exposes only German str
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: TOC & Load Gate** - Update Interface version and fix load-blocking API calls so the addon loads on Midnight (completed 2026-04-18)
-- [ ] **Phase 2: API Compatibility** - Fix all broken Midnight APIs so core functionality (join, filter, options) works correctly
+- [x] **Phase 2: API Compatibility** - Fix all broken Midnight APIs so core functionality (join, filter, options) works correctly (completed 2026-04-18)
 - [ ] **Phase 3: Localization System** - Create the L-table with enUS primary and deDE override, replace all hardcoded strings
 - [ ] **Phase 4: Modularization** - Split monolithic Lua into separate files with correct TOC load order
 - [ ] **Phase 5: Code Quality** - Remove dead code, clean naming conventions, resolve forward declarations into modules
@@ -44,7 +44,7 @@ Plans:
 **Plans:** 2 plans
 Plans:
 - [x] 02-01-PLAN.md — Remove dead API paths (activityID, InterfaceOptions, OptionsSliderTemplate)
-- [ ] 02-02-PLAN.md — Add Midnight API support (generalPlaystyle, Secret Values hardening)
+- [x] 02-02-PLAN.md — Add Midnight API support (generalPlaystyle, Secret Values hardening)
 
 ### Phase 3: Localization System
 **Goal**: All UI strings are served from a localization table — English-locale users see English, German-locale users see German, and no hardcoded German strings remain in the main Lua file
@@ -87,7 +87,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. TOC & Load Gate | 1/1 | Complete | 2026-04-18 |
-| 2. API Compatibility | 1/2 | In progress | - |
+| 2. API Compatibility | 2/2 | Complete | 2026-04-18 |
 | 3. Localization System | 0/TBD | Not started | - |
 | 4. Modularization | 0/TBD | Not started | - |
 | 5. Code Quality | 0/TBD | Not started | - |

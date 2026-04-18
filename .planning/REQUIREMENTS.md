@@ -14,8 +14,8 @@ Requirements for Addon v2.0 release. Each maps to roadmap phases.
 - [x] **COMP-03**: `activityID` → `activityIDs` Codepfad konsolidieren (toter Primary-Branch entfernen)
 - [x] **COMP-04**: Legacy `InterfaceOptions_AddCategory` Fallback entfernen
 - [x] **COMP-05**: `OptionsSliderTemplate` durch Midnight-kompatibles Template ersetzen
-- [ ] **COMP-06**: `generalPlaystyle` Feld für neue Content-Typen in ClassifyResult() nutzen
-- [ ] **COMP-07**: Secret Values Taint-Hardening für In-Instance-Nutzung
+- [x] **COMP-06**: `generalPlaystyle` Feld für neue Content-Typen in ClassifyResult() nutzen
+- [x] **COMP-07**: Secret Values Taint-Hardening für In-Instance-Nutzung
 
 ### Localization
 
@@ -73,8 +73,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COMP-03 | Phase 2 | Complete |
 | COMP-04 | Phase 2 | Complete |
 | COMP-05 | Phase 2 | Complete |
-| COMP-06 | Phase 2 | Pending |
-| COMP-07 | Phase 2 | Pending |
+| COMP-06 | Phase 2 | Complete |
+| COMP-07 | Phase 2 | Complete |
 | LOCA-01 | Phase 3 | Pending |
 | LOCA-02 | Phase 3 | Pending |
 | LOCA-03 | Phase 3 | Pending |
