@@ -1,0 +1,412 @@
+-- EquiFastJoin: UI
+local _, EFJ = ...
+
+local L = EFJ.L
+
+-- UI --------------------------------------------------------------------------
+EFJ.UI = { rows = {}, visibleIDs = {}, mode = "lfg" }
+local ROW_HEIGHT = 54
+local ROW_SPACING = 2
+local MAX_ROWS = 30
+
+local function CreateRow(parent, index)
+  local row = CreateFrame("Frame", nil, parent)
+  row:SetSize(parent:GetWidth()-20, ROW_HEIGHT)
+  row:SetPoint("TOPLEFT", 4, -(index-1)*ROW_HEIGHT)
+  row.index = index
+
+  row.iconLeader = row:CreateTexture(nil,"ARTWORK")
+  row.iconLeader:SetSize(20,20); row.iconLeader:SetPoint("TOPLEFT",0,-2)
+
+  row.textLeader = row:CreateFontString(nil,"ARTWORK","GameFontNormal")
+  row.textLeader:SetPoint("LEFT", row.iconLeader,"RIGHT",4,0)
+  row.textLeader:SetJustifyH("LEFT")
+
+  row.classIcons = {}
+  local holder = CreateFrame("Frame", nil, row)
+  holder:SetSize(128,20); holder:SetPoint("LEFT", row.textLeader,"RIGHT",4,0)
+  row.classHolder=holder
+
+  row.textActivity = row:CreateFontString(nil,"ARTWORK","GameFontHighlightSmall")
+  row.textActivity:SetPoint("TOPLEFT", row.iconLeader,"BOTTOMLEFT",0,-4)
+  row.textActivity:SetWidth(parent:GetWidth()-168)
+  row.textActivity:SetJustifyH("LEFT")
+
+  row.textNote = row:CreateFontString(nil,"ARTWORK","GameFontDisableSmall")
+  row.textNote:SetPoint("TOPLEFT", row.textActivity,"BOTTOMLEFT",0,-2)
+  row.textNote:SetWidth(parent:GetWidth()-168)
+  row.textNote:SetJustifyH("LEFT")
+
+  row.join = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+  row.join:SetSize(84,26); row.join:SetPoint("RIGHT",-32,0); row.join:SetText(L["Join"])
+
+  row:Hide(); return row
+end
+
+function EFJ.UI:ComputeRowHeight(row)
+  if not row or not row:IsShown() then return ROW_HEIGHT end
+  local w = (self.frame and self.frame:GetWidth()) or (row:GetWidth()+20)
+  local textWidth = (w - 168)
+  if textWidth and textWidth > 50 then
+    row.textActivity:SetWidth(textWidth)
+    row.textNote:SetWidth(textWidth)
+  end
+  row.textActivity:SetText(row.textActivity:GetText() or "")
+  row.textNote:SetText(row.textNote:GetText() or "")
+  local hActivity = math.ceil(row.textActivity:GetStringHeight() or 0)
+  local hNote = math.ceil(row.textNote:GetStringHeight() or 0)
+  local iconH = row.iconLeader:GetHeight() or 20
+  local contentH = math.max(iconH + 4 + hActivity + 2 + hNote, 26)
+  local h = math.max(ROW_HEIGHT, contentH + 6)
+  row:SetHeight(h)
+  return h
+end
+
+function EFJ.UI:Relayout()
+  if not (self.frame and self.content) then return end
+  local y = 0
+  local total = 0
+  for i, row in ipairs(self.rows) do
+    if row:IsShown() then
+      local h = self:ComputeRowHeight(row)
+      row:ClearAllPoints()
+      row:SetPoint("TOPLEFT", self.content, "TOPLEFT", 4, -y)
+      y = y + h + ROW_SPACING
+      total = total + h + ROW_SPACING
+    else
+      row:ClearAllPoints()
+      row:SetPoint("TOPLEFT", self.content, "TOPLEFT", 4, -y)
+    end
+  end
+  total = math.max(total, ROW_HEIGHT)
+  self.content:SetHeight(total)
+end
+
+local function UpdateRowWidths(self)
+  if not self.frame then return end
+  local w = self.frame:GetWidth()
+  if self.content then self.content:SetWidth(w-32) end
+  for _,row in ipairs(self.rows) do
+    row:SetWidth(w-20)
+    row.textActivity:SetWidth(w-168)
+    row.textNote:SetWidth(w-168)
+  end
+  self:Relayout()
+end
+
+function EFJ.UI:Create()
+  if self.frame then return end
+  local f = CreateFrame("Frame","EquiFastJoinFrame",UIParent,"BackdropTemplate")
+  f:SetSize(EquiFastJoinDB.width or 400, EquiFastJoinDB.height or 300)
+  f:ClearAllPoints(); f:SetPoint(EquiFastJoinDB.point or "CENTER", UIParent, EquiFastJoinDB.rel or "CENTER", EquiFastJoinDB.x or 0, EquiFastJoinDB.y or 0)
+  f:SetResizable(true); f:SetResizeBounds(300,200, 1200, 900)
+  f:SetScale(EquiFastJoinDB.scale or 1.0)
+  f:EnableMouse(true); f:SetMovable(true)
+  f:RegisterForDrag("LeftButton")
+  f:SetScript("OnDragStart", function(self) if not EquiFastJoinDB.lockFrame then self:StartMoving() end end)
+  f:SetScript("OnDragStop", function(self)
+    self:StopMovingOrSizing()
+    local point,_,rel,x,y = self:GetPoint()
+    EquiFastJoinDB.point, EquiFastJoinDB.rel, EquiFastJoinDB.x, EquiFastJoinDB.y = point, rel, x, y
+  end)
+  f:SetScript("OnSizeChanged", function(self, w, h)
+    EquiFastJoinDB.width, EquiFastJoinDB.height = math.floor(w), math.floor(h)
+    UpdateRowWidths(EFJ.UI)
+  end)
+
+  f:SetBackdrop({ bgFile="Interface/Tooltips/UI-Tooltip-Background", insets={left=0,right=0,top=0,bottom=0} })
+  f:SetBackdropColor(0,0,0,0.5)
+
+  local title = f:CreateFontString(nil,"ARTWORK","GameFontNormalLarge")
+  title:SetPoint("TOPLEFT",8,-8); title:SetText("EquiFastJoin"); f.title=title
+
+  local close = CreateFrame("Button",nil,f,"UIPanelCloseButton")
+  close:SetPoint("TOPRIGHT",0,0)
+  close:SetScript("OnClick", function()
+    if #EFJ.UI.visibleIDs>0 then EquiFastJoinDB.lastDismissSignature=EFJ.BuildSignature(EFJ.UI.visibleIDs) end
+    f:Hide()
+  end)
+
+  local scroll = CreateFrame("ScrollFrame","EquiFastJoinScroll",f,"UIPanelScrollFrameTemplate")
+  scroll:SetPoint("TOPLEFT", f, "TOPLEFT", 4,-30)
+  scroll:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT",-28,4)
+  local content = CreateFrame("Frame",nil,scroll)
+  content:SetSize(f:GetWidth()-32, ROW_HEIGHT*MAX_ROWS)
+  scroll:SetScrollChild(content)
+  f.scroll=scroll; f.content=content
+
+  local grip = CreateFrame("Frame", nil, f)
+  grip:SetSize(16,16); grip:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -22, 22)
+  local tex = grip:CreateTexture(nil, "ARTWORK")
+  tex:SetAllPoints(true); tex:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+  grip.tex=tex
+  grip:EnableMouse(true)
+  grip:SetScript("OnMouseDown", function() f:StartSizing("BOTTOMRIGHT"); tex:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down") end)
+  grip:SetScript("OnMouseUp", function() f:StopMovingOrSizing(); tex:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up") end)
+
+  self.rows={}
+  for i=1,MAX_ROWS do self.rows[i]=CreateRow(content,i) end
+
+  f:Hide(); self.frame=f; self.content=content
+end
+
+function EFJ.UI:UpdateJoinButton(row, id)
+  if not row or not id then return end
+  local cached = EFJ.State and EFJ.State.applications and EFJ.State.applications[id]
+  local _, appStatus, pendingStatus = C_LFGList.GetApplicationInfo and C_LFGList.GetApplicationInfo(id) or nil
+  appStatus = appStatus or cached or "none"
+  if appStatus == "applied" or pendingStatus then
+    row.join:SetEnabled(true)
+    row.join:SetAlpha(1)
+    row.join:SetText(L["Leave"])
+    row.join:SetScript("OnClick", function() EFJ.CancelApplicationAndMark(row, id) end)
+  elseif appStatus == "invited" then
+    row.join:SetEnabled(false)
+    row.join:SetAlpha(0.6)
+    row.join:SetText(L["Invited"])
+  else
+    row.join:SetEnabled(true)
+    row.join:SetAlpha(1)
+    row.join:SetText(L["Join"])
+    row.join:SetScript("OnClick", function() EFJ.TryJoinAndMark(row, id) end)
+  end
+end
+
+function EFJ.UI:MarkAppliedByID(id, newStatus)
+  if not id then return end
+  if EFJ.State and EFJ.State.applications then EFJ.State.applications[id] = newStatus end
+  for _, row in ipairs(self.rows) do
+    if row:IsShown() and row.resultID == id then
+      if newStatus == "applied" or newStatus == "applied_with_role" then
+        row.join:SetEnabled(true)
+        row.join:SetAlpha(1)
+        row.join:SetText(L["Leave"])
+        row.join:SetScript("OnClick", function() EFJ.CancelApplicationAndMark(row, id) end)
+      elseif newStatus == "invited" then
+        row.join:SetEnabled(false)
+        row.join:SetAlpha(0.6)
+        row.join:SetText(L["Invited"])
+      elseif newStatus == "declined" or newStatus == "declined_full" or newStatus == "declined_delisted" or newStatus == "timedout" or newStatus == "cancelled" or newStatus == "none" then
+        if EFJ.State and EFJ.State.applications then EFJ.State.applications[id] = nil end
+        row.join:SetEnabled(true)
+        row.join:SetAlpha(1)
+        row.join:SetText(L["Join"])
+        row.join:SetScript("OnClick", function() EFJ.TryJoinAndMark(row, id) end)
+      end
+      break
+    end
+  end
+end
+
+function EFJ.UI:StartQuickTicker()
+  if self.quickTicker then return end
+  self.quickTicker = C_Timer.NewTicker(3, function()
+    if self.mode ~= "quickjoin" then self:StopQuickTicker(); return end
+    local entries = EFJ.GatherQuickJoinEntries()
+    if not entries or #entries == 0 then
+      if self.frame and self.frame:IsShown() then self.frame:Hide() end
+      self.mode = "none"
+      self:StopQuickTicker()
+      return
+    end
+    self:ShowQuickJoin(entries)
+  end)
+end
+
+function EFJ.UI:StopQuickTicker()
+  if self.quickTicker then self.quickTicker:Cancel(); self.quickTicker = nil end
+end
+
+function EFJ.UI:ShowBanner(headline, subline)
+  self:Create()
+  for i,row in ipairs(self.rows) do row:Hide() end
+  local row = self.rows[1]
+  row.textLeader:SetText(headline or L["Quick Join"])
+  row.iconLeader:SetTexture(134400)
+  row.iconLeader:SetTexCoord(0,1,0,1)
+  row.textActivity:SetText(subline or L["New Quick Join suggestions available."])
+  row.textNote:SetText("")
+  row.join:SetText(L["OK"])
+  row.join:SetScript("OnClick", function()
+    if InCombatLockdown and InCombatLockdown() then
+      if UIErrorsFrame then UIErrorsFrame:AddMessage(L["EFJ: Not available in combat"], 1, 0.2, 0.2) end
+    end
+    self.frame:Hide()
+  end)
+  row.join:SetEnabled(true)
+  row:Show()
+  self.visibleIDs = {}
+  self.mode = "banner"
+  self.frame:Show()
+end
+
+function EFJ.UI:ShowTest()
+  self:ShowBanner("EquiFastJoin Test", L["This is a test entry."])
+end
+
+local function SetQuickJoinMemberIcons(row, classes)
+  for i,tex in ipairs(row.classIcons) do tex:Hide() end
+  local prev, shown = nil, 0
+  for _, classEN in ipairs(classes or {}) do
+    shown = shown + 1
+    local tex=row.classIcons[shown]
+    if not tex then tex=row.classHolder:CreateTexture(nil,"ARTWORK"); row.classIcons[shown]=tex; tex:SetSize(16,16) end
+    if prev then tex:SetPoint("LEFT",prev,"RIGHT",2,0) else tex:SetPoint("LEFT",row.classHolder,"LEFT",0,0) end
+    tex:SetTexture("Interface\\TargetingFrame\\UI-Classes-Circles")
+    local c=CLASS_ICON_TCOORDS[classEN]; if c then tex:SetTexCoord(c[1],c[2],c[3],c[4]) else tex:SetTexCoord(0,1,0,1) end
+    tex:Show(); prev=tex
+    if shown>=6 then break end
+  end
+end
+
+function EFJ.UI:ShowQuickJoin(entries)
+  self:Create()
+  self.mode = "quickjoin"
+  self.visibleIDs = {}
+  local filtered = {}
+  for _,e in ipairs(entries) do
+    if e.res and EFJ.ResultMatchesFilters(e.res) then table.insert(filtered, e) end
+  end
+  for i,row in ipairs(self.rows) do
+    local e = filtered[i]
+    if e then
+      local leaderClass = e.leaderClass
+      row.textLeader:SetText(EFJ.ColorizeByClass(e.leaderName, leaderClass))
+      if leaderClass and CLASS_ICON_TCOORDS[leaderClass] then
+        row.iconLeader:SetTexture("Interface\\TargetingFrame\\UI-Classes-Circles")
+        local c=CLASS_ICON_TCOORDS[leaderClass]; row.iconLeader:SetTexCoord(c[1],c[2],c[3],c[4])
+        row.iconLeader:Show()
+      else
+        row.iconLeader:SetTexture("Interface\\GroupFrame\\UI-Group-LeaderIcon")
+        row.iconLeader:SetTexCoord(0,1,0,1)
+        row.iconLeader:Show()
+      end
+
+      local color = e.res and EFJ.BuildCategoryColor(e.res) or "|cffffffff"
+      row.textActivity:SetText((color.."%s|r"):format(e.activityText or "-"))
+      local title = e.res and (e.res.name or e.comment or "") or (e.comment or "")
+      row.textNote:SetText(title)
+      if e.res and e.lfgID then
+        EFJ.SetRoleIconsFromLFG(row, e.lfgID)
+      else
+        for i,tex in ipairs(row.classIcons) do tex:Hide() end
+      end
+
+      if e.lfgID then
+        row.join:SetEnabled(true); row.join:SetAlpha(1)
+        row.join:SetText(L["Join"])
+        row.join:SetScript("OnClick", function() EFJ.TryJoinAndMark(row, e.lfgID) end)
+        row.resultID = e.lfgID
+        self:UpdateJoinButton(row, e.lfgID)
+      else
+        row.join:SetEnabled(false); row.join:SetAlpha(0.4)
+        row.join:SetText(L["Not in LFG"])
+        row.join:SetScript("OnClick", nil)
+        row.resultID = nil
+      end
+
+      row:Show()
+      self:ComputeRowHeight(row)
+    else
+      row:Hide()
+    end
+  end
+  self:Relayout()
+  if #filtered == 0 then
+    if self.frame and self.frame:IsShown() then self.frame:Hide() end
+    self.mode = "none"
+    self:StopQuickTicker()
+    return
+  end
+  self.frame:Show()
+  self:StartQuickTicker()
+end
+
+function EFJ.UI:SetRows(ids)
+  self.visibleIDs = {}
+  self.mode = "lfg"
+  for i,row in ipairs(self.rows) do
+    local id = ids[i]
+    if id then
+      local res = EFJ.GetFreshResultInfo(id)
+      if res and EFJ.ResultMatchesFilters(res) then
+        local leaderName = res.leaderName or "-"
+        local leaderClass = EFJ.FindLeaderClass(id, leaderName)
+        row.textLeader:SetText(EFJ.ColorizeByClass(leaderName, leaderClass))
+        if leaderClass and CLASS_ICON_TCOORDS[leaderClass] then
+          row.iconLeader:SetTexture("Interface\\TargetingFrame\\UI-Classes-Circles")
+          local c=CLASS_ICON_TCOORDS[leaderClass]; row.iconLeader:SetTexCoord(c[1],c[2],c[3],c[4])
+          row.iconLeader:Show()
+        else
+          row.iconLeader:SetTexture("Interface\\GroupFrame\\UI-Group-LeaderIcon")
+          row.iconLeader:SetTexCoord(0,1,0,1)
+          row.iconLeader:Show()
+        end
+
+        local color = EFJ.BuildCategoryColor(res)
+        row.textActivity:SetText((color.."%s|r"):format(res.activityText or L["Unknown Activity"]))
+        row.textNote:SetText(res.name or res.comment or "")
+        EFJ.SetRoleIconsFromLFG(row, id)
+
+        row.join:SetEnabled(true); row.join:SetAlpha(1)
+        row.join:SetText(L["Join"])
+        row.join:SetScript("OnClick", function() EFJ.TryJoinAndMark(row, id) end)
+        row.resultID = id
+        self:UpdateJoinButton(row, id)
+
+        row:Show()
+        self:ComputeRowHeight(row)
+        table.insert(self.visibleIDs, id)
+      else
+        row.resultID = nil
+        row:Hide()
+      end
+    else
+      row.resultID = nil
+      row:Hide()
+    end
+  end
+  self:Relayout()
+end
+
+local function ToastForIDs(ids)
+  if not EquiFastJoinDB.showToast or not RaidWarningFrame then return end
+  if #ids == 0 then return end
+  local id = ids[1]
+  local res = EFJ.GetFreshResultInfo(id); if not res then return end
+  local act = EFJ.GetActivityInfoForRes(res)
+  local text = res.activityText or L["New Entry"]
+  local color = "|cffffffff"
+  if res.isMythicPlusActivity or (act and act.fullName and act.fullName:find("%+")) then
+    color="|cff00ff88"
+  elseif act and act.categoryID==2 then
+    color="|cffffa000"
+  elseif act and act.categoryID==1 then
+    color="|cff4fb2ff"
+  elseif act and (act.categoryID==3 or act.categoryID==4) then
+    color="|cffff4f4f"
+  end
+  RaidNotice_AddMessage(RaidWarningFrame, ("EquiFastJoin: %s%s|r"):format(color, text), ChatTypeInfo["RAID_WARNING"])
+end
+
+function EFJ.UI:ShowListFor(ids)
+  self:Create()
+  self:StopQuickTicker()
+  self:SetRows(ids)
+  if #self.visibleIDs==0 then
+    if self.frame and self.frame:IsShown() then self.frame:Hide() end
+    self.mode = "lfg"
+    return
+  end
+  if EquiFastJoinDB.playSound and PlaySound then
+    if SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPEN then PlaySound(SOUNDKIT.IG_MAINMENU_OPEN) else PlaySound(8959) end
+  end
+  ToastForIDs(self.visibleIDs)
+  self.frame:Show()
+end
+
+function EFJ.UI:HideIfEmpty()
+  if self.frame and self.frame:IsShown() and (#self.visibleIDs==0) then
+    self.frame:Hide()
+  end
+end
