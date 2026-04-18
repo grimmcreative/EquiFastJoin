@@ -73,7 +73,7 @@ Plans:
 Plans:
 - [x] 04-01-PLAN.md — Create Locales.lua and Core.lua (foundation modules)
 - [x] 04-02-PLAN.md — Create Data.lua and Logic.lua (data and processing modules)
-- [ ] 04-03-PLAN.md — Create UI.lua (display module)
+- [x] 04-03-PLAN.md — Create UI.lua (display module)
 - [ ] 04-04-PLAN.md — Create Events.lua and SlashCommands.lua, rewrite TOC, delete monolith
 **UI hint**: yes
 
@@ -97,5 +97,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 1. TOC & Load Gate | 1/1 | Complete | 2026-04-18 |
 | 2. API Compatibility | 2/2 | Complete | 2026-04-18 |
 | 3. Localization System | 2/2 | Complete | 2026-04-18 |
-| 4. Modularization | 2/4 | In progress | - |
+| 4. Modularization | 3/4 | In progress | - |
 | 5. Code Quality | 0/TBD | Not started | - |
