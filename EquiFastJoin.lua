@@ -86,6 +86,14 @@ local function ClassifyResult(res)
   if categoryID == 1 then return "DUNGEON" end
   if categoryID == 3 or categoryID == 4 then return "PVP" end
   if categoryID == 6 then return "CUSTOM" end
+  -- generalPlaystyle (Midnight 12.0+): new content types that lack a categoryID
+  -- Values: 0=None, 1=Learning, 2=FunRelaxed, 3=FunSerious, 4=Expert
+  -- Describes play intent, not content type — classify as "OTHER" regardless
+  local gps = res.generalPlaystyle
+  if gps and not (issecretvalue and issecretvalue(gps)) then
+    -- Field is present and not secret; content type is genuinely new/uncategorized
+    return "OTHER"
+  end
   return "OTHER"
 end
 
