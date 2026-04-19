@@ -99,7 +99,7 @@ function EFJ.UI:Create()
   local f = CreateFrame("Frame","EquiFastJoinFrame",UIParent,"BackdropTemplate")
   f:SetSize(EquiFastJoinDB.width or 400, EquiFastJoinDB.height or 300)
   f:ClearAllPoints(); f:SetPoint(EquiFastJoinDB.point or "CENTER", UIParent, EquiFastJoinDB.rel or "CENTER", EquiFastJoinDB.x or 0, EquiFastJoinDB.y or 0)
-  f:SetResizable(true); f:SetResizeBounds(300,200, 1200, 900)
+  f:SetResizeBounds(300,200, 1200, 900)
   f:SetScale(EquiFastJoinDB.scale or 1.0)
   f:EnableMouse(true); f:SetMovable(true)
   f:RegisterForDrag("LeftButton")
@@ -153,7 +153,10 @@ end
 function EFJ.UI:UpdateJoinButton(row, id)
   if not row or not id then return end
   local cached = EFJ.State and EFJ.State.applications and EFJ.State.applications[id]
-  local _, appStatus, pendingStatus = C_LFGList.GetApplicationInfo and C_LFGList.GetApplicationInfo(id) or nil
+  local appStatus, pendingStatus
+  if C_LFGList.GetApplicationInfo then
+    _, appStatus, pendingStatus = C_LFGList.GetApplicationInfo(id)
+  end
   appStatus = appStatus or cached or "none"
   if appStatus == "applied" or pendingStatus then
     row.join:SetEnabled(true)

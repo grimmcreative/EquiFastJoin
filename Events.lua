@@ -58,7 +58,7 @@ ev:SetScript("OnEvent", function(_,event,...)
           local text = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
           text:SetPoint("TOPLEFT", x, y)
           text:SetText(label)
-          local slider = CreateFrame("Slider", nil, panel, "UISliderTemplateWithLabels")
+          local slider = CreateFrame("Slider", nil, panel, "OptionsSliderTemplate")
           slider:SetPoint("TOPLEFT", x, y - 18)
           slider:SetMinMaxValues(minV, maxV)
           slider:SetValueStep(step)
@@ -104,8 +104,10 @@ ev:SetScript("OnEvent", function(_,event,...)
         end
         self.panel=panel
       end
-      EFJ.Options:Create()
+      local optOk, optErr = pcall(function() EFJ.Options:Create() end)
+      if not optOk then print("|cffff3333[EFJ] Options panel error:|r", optErr) end
     end
+    print("|cff33ff99[EFJ]|r EquiFastJoin v" .. (C_AddOns.GetAddOnMetadata and C_AddOns.GetAddOnMetadata("EquiFastJoin","Version") or "?") .. " loaded.")
     DBG("Addon loaded. Initializing refresh.")
     C_Timer.After(1.0, function()
       pcall(function() if not (InCombatLockdown and InCombatLockdown()) then C_LFGList.RefreshResults() end end)
